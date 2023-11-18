@@ -1,7 +1,7 @@
 import board
 import time
 from digitalio import DigitalInOut
-from keypad import Keys
+from keypad import Event, Keys
 from pwmio import PWMOut
 
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
@@ -56,36 +56,36 @@ display_buf = bytearray(DISPLAY_WIDTH * DISPLAY_HEIGHT)
 keys = Keys(pins=(board.GP13, board.GP14, board.GP15), value_when_pressed=False)
 
 
-def clamp(value, min_, max_):
-    return max(min(value, max_), min_)
+def clamp(value: int, low: int, hi: int) -> int:
+    return max(min(value, hi), low)
 
 
-def set_default_cursor():
+def set_default_cursor() -> None:
     display.create_char(6, CHAR_CURSOR_A0)
     display.create_char(7, CHAR_CURSOR_A1)
 
 
-def set_alternate_cursor():
+def set_alternate_cursor() -> None:
     display.create_char(6, CHAR_CURSOR_B0)
     display.create_char(7, CHAR_CURSOR_B1)
 
 
-def set_backlight(percentage):
+def set_backlight(percentage: int) -> None:
     display_bl.duty_cycle = percentage * 65535 // 100
 
 
-def clear_buffer():
+def clear_buffer() -> None:
     display_buf[:] = b" " * len(display_buf)
 
 
-def update_buffer(pos, data):
+def update_buffer(pos: tuple[int, int], data: bytes) -> None:
     col, row = pos
     byte_id = row * DISPLAY_WIDTH + col
 
     display_buf[byte_id : byte_id + len(data)] = data
 
 
-def send_buffer():
+def send_buffer() -> None:
     lines = []
 
     for row in range(0, DISPLAY_HEIGHT):
@@ -98,20 +98,20 @@ def send_buffer():
     display.message = "\n".join(lines)
 
 
-class Menu:
-    def enter(self):
+class BaseMenu:
+    def enter(self) -> None:
         self.render()
 
-    def render(self):
+    def render(self) -> None:
         pass
 
-    def loop(self):
+    def loop(self) -> None:
         pass
 
-    def exit(self):
+    def exit(self) -> None:
         pass
 
-    def _enter_submenu(self, instance):
+    def _enter_submenu(self, instance: "BaseMenu") -> None:
         try:
             instance.enter()
             while True:
@@ -125,17 +125,17 @@ class MenuExit(Exception):
     pass
 
 
-class IdleMenu(Menu):
-    def enter(self):
+class IdleMenu(BaseMenu):
+    def enter(self) -> None:
         super().enter()
         set_backlight(BACKLIGHT_OFF)
 
-    def render(self):
+    def render(self) -> None:
         clear_buffer()
         update_buffer((0, 0), b"" + datetime.now().time().isoformat())
         send_buffer()
 
-    def loop(self):
+    def loop(self) -> None:
         event = keys.events.get()
         if event and event.pressed:
             if event.key_number == KEY_OK:
@@ -145,9 +145,12 @@ class IdleMenu(Menu):
         time.sleep(1.0)
 
 
-class MainMenu(Menu):
+class MainMenu(BaseMenu):
     MIN_CURSOR = 0
     MAX_CURSOR = 6
+
+    SET_OPEN = 2
+    RETURN = 6
 
     CURSOR_POSITIONS = (
         ((0, 0), (2, 0)),
@@ -169,15 +172,15 @@ class MainMenu(Menu):
         b"Return",
     )
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.cursor = 0
 
-    def enter(self):
+    def enter(self) -> None:
         super().enter()
         set_backlight(BACKLIGHT_LOW)
 
-    def render(self):
+    def render(self) -> None:
         cursor_a, cursor_b = MainMenu.CURSOR_POSITIONS[self.cursor]
 
         clear_buffer()
@@ -187,7 +190,7 @@ class MainMenu(Menu):
         update_buffer(cursor_b, b"\x07")
         send_buffer()
 
-    def loop(self):
+    def loop(self) -> None:
         event = keys.events.get()
         if event and event.pressed:
             if event.key_number == KEY_L:
@@ -197,18 +200,22 @@ class MainMenu(Menu):
                 if self.cursor != MainMenu.MAX_CURSOR:
                     self.cursor += 1
             if event.key_number == KEY_OK:
-                if self.cursor == 2:
-                    self._enter_submenu(OpenSettingsMenu())
-                if self.cursor == 6:
+                if self.cursor == MainMenu.SET_OPEN:
+                    self._enter_submenu(OpenMenu())
+                if self.cursor == MainMenu.RETURN:
                     raise MenuExit()
             self.render()
 
         time.sleep(0.1)
 
 
-class OpenSettingsMenu(Menu):
+class OpenMenu(BaseMenu):
     MIN_CURSOR = 0
     MAX_CURSOR = 7
+
+    NUM_FIELDS = (0, 1, 2, 3, 4, 5)
+    PREVIEW = 6
+    RETURN = 7
 
     CURSOR_POSITIONS = (
         ((0, 0), (3, 0)),
@@ -221,9 +228,16 @@ class OpenSettingsMenu(Menu):
         ((12, 1), (15, 1)),
     )
 
-    CURSOR_MAX_VALUES = (23, 59, 23, 59, 100, 25)
+    CURSOR_MIN_MAX_VALUES = (
+        (0, 23),
+        (0, 59),
+        (0, 23),
+        (0, 59),
+        (0, 120),
+        (0, 25),
+    )
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         self.cursor = 0
@@ -231,23 +245,23 @@ class OpenSettingsMenu(Menu):
 
         self.values = [1, 12, 23, 34, 456, 56]
 
-    def render(self):
-        cursor_a, cursor_b = OpenSettingsMenu.CURSOR_POSITIONS[self.cursor]
+    def render(self) -> None:
+        cursor_a, cursor_b = OpenMenu.CURSOR_POSITIONS[self.cursor]
 
         clear_buffer()
         update_buffer((1, 0), b"  :   -   :  ")
         update_buffer((1, 1), b"   s   x  \xD0 OK")
-        update_buffer((1, 0), b"" + f"{self.values[0]:02}")
-        update_buffer((4, 0), b"" + f"{self.values[1]:02}")
-        update_buffer((9, 0), b"" + f"{self.values[2]:02}")
-        update_buffer((12, 0), b"" + f"{self.values[3]:02}")
-        update_buffer((1, 1), b"" + f"{self.values[4]:3}")
-        update_buffer((6, 1), b"" + f"{self.values[5]:2}")
+        update_buffer((1, 0), f"{self.values[0]:02}".encode())
+        update_buffer((4, 0), f"{self.values[1]:02}".encode())
+        update_buffer((9, 0), f"{self.values[2]:02}".encode())
+        update_buffer((12, 0), f"{self.values[3]:02}".encode())
+        update_buffer((1, 1), f"{self.values[4]:3}".encode())
+        update_buffer((6, 1), f"{self.values[5]:2}".encode())
         update_buffer(cursor_a, b"\x06")
         update_buffer(cursor_b, b"\x07")
         send_buffer()
 
-    def loop(self):
+    def loop(self) -> None:
         event = keys.events.get()
         if event and event.pressed:
             if self.edit:
@@ -258,31 +272,33 @@ class OpenSettingsMenu(Menu):
 
         time.sleep(0.1)
 
-    def _loop_navi(self, event):
+    def _loop_navi(self, event: Event) -> None:
         if event.key_number == KEY_L:
-            if self.cursor != OpenSettingsMenu.MIN_CURSOR:
+            if self.cursor != OpenMenu.MIN_CURSOR:
                 self.cursor -= 1
         if event.key_number == KEY_R:
-            if self.cursor != OpenSettingsMenu.MAX_CURSOR:
+            if self.cursor != OpenMenu.MAX_CURSOR:
                 self.cursor += 1
         if event.key_number == KEY_OK:
-            if self.cursor in (0, 1, 2, 3, 4, 5):
+            if self.cursor in OpenMenu.NUM_FIELDS:
                 set_alternate_cursor()
                 set_backlight(BACKLIGHT_HIGH)
                 self.edit = True
-            if self.cursor == 7:
+            if self.cursor == OpenMenu.RETURN:
                 raise MenuExit()
 
-    def _loop_edit(self, event):
+    def _loop_edit(self, event: Event) -> None:
         value = self.values[self.cursor]
-        max_value = OpenSettingsMenu.CURSOR_MAX_VALUES[self.cursor]
+        low, hi = OpenMenu.CURSOR_MIN_MAX_VALUES[self.cursor]
 
-        if self.cursor in (0, 1, 2, 3, 4, 5):
-            if event.key_number == KEY_L:
-                self.values[self.cursor] = clamp(value - 1, 0, max_value)
-            if event.key_number == KEY_R:
-                self.values[self.cursor] = clamp(value + 1, 0, max_value)
-            if event.key_number == KEY_OK:
+        if event.key_number == KEY_L:
+            if self.cursor in OpenMenu.NUM_FIELDS:
+                self.values[self.cursor] = clamp(value - 1, low, hi)
+        if event.key_number == KEY_R:
+            if self.cursor in OpenMenu.NUM_FIELDS:
+                self.values[self.cursor] = clamp(value + 1, low, hi)
+        if event.key_number == KEY_OK:
+            if self.cursor in OpenMenu.NUM_FIELDS:
                 set_default_cursor()
                 set_backlight(BACKLIGHT_LOW)
                 self.edit = False
