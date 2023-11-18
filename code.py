@@ -140,7 +140,17 @@ class MainMenu(Menu):
     MIN_CURSOR = 0
     MAX_CURSOR = 6
 
-    LABELS = (
+    CURSOR_POSITIONS = (
+        ((0, 0), (2, 0)),
+        ((2, 0), (4, 0)),
+        ((4, 0), (6, 0)),
+        ((6, 0), (8, 0)),
+        ((8, 0), (10, 0)),
+        ((10, 0), (12, 0)),
+        ((12, 0), (14, 0)),
+    )
+
+    CURSOR_LABELS = (
         b"Open",
         b"Close",
         b"Set up opening",
@@ -159,22 +169,75 @@ class MainMenu(Menu):
         set_backlight(BACKLIGHT_LOW)
 
     def render(self):
+        cursor_a, cursor_b = MainMenu.CURSOR_POSITIONS[self.cursor]
+
         clear_buffer()
         update_buffer((1, 0), b"\x00 \x01 \x02 \x03 \x04 \xD0 \x05")
-        update_buffer((1, 1), MainMenu.LABELS[self.cursor])
-        update_buffer((self.cursor * 2, 0), b"\x06")
-        update_buffer((self.cursor * 2 + 2, 0), b"\x07")
+        update_buffer((1, 1), MainMenu.CURSOR_LABELS[self.cursor])
+        update_buffer(cursor_a, b"\x06")
+        update_buffer(cursor_b, b"\x07")
         send_buffer()
 
     def loop(self):
         event = keys.events.get()
         if event and event.pressed:
-            if event.key_number == KEY_L and self.cursor != MainMenu.MIN_CURSOR:
-                self.cursor -= 1
-            if event.key_number == KEY_R and self.cursor != MainMenu.MAX_CURSOR:
-                self.cursor += 1
-            if event.key_number == KEY_OK and self.cursor == MainMenu.MAX_CURSOR:
-                raise MenuExit()
+            if event.key_number == KEY_L:
+                if self.cursor != MainMenu.MIN_CURSOR:
+                    self.cursor -= 1
+            if event.key_number == KEY_R:
+                if self.cursor != MainMenu.MAX_CURSOR:
+                    self.cursor += 1
+            if event.key_number == KEY_OK:
+                if self.cursor == 2:
+                    self._enter_submenu(OpenSettingsMenu())
+                if self.cursor == 6:
+                    raise MenuExit()
+            self.render()
+
+        time.sleep(0.1)
+
+
+class OpenSettingsMenu(Menu):
+    MIN_CURSOR = 0
+    MAX_CURSOR = 7
+
+    CURSOR_POSITIONS = (
+        ((0, 0), (3, 0)),
+        ((3, 0), (6, 0)),
+        ((8, 0), (11, 0)),
+        ((11, 0), (14, 0)),
+        ((0, 1), (5, 1)),
+        ((5, 1), (9, 1)),
+        ((10, 1), (12, 1)),
+        ((12, 1), (15, 1)),
+    )
+
+    def __init__(self):
+        super().__init__()
+        self.cursor = 0
+
+    def render(self):
+        cursor_a, cursor_b = OpenSettingsMenu.CURSOR_POSITIONS[self.cursor]
+
+        clear_buffer()
+        update_buffer((1, 0), b"99:99 - 99:99")
+        update_buffer((1, 1), b"999s 99x  \xD0 OK")
+        update_buffer(cursor_a, b"\x06")
+        update_buffer(cursor_b, b"\x07")
+        send_buffer()
+
+    def loop(self):
+        event = keys.events.get()
+        if event and event.pressed:
+            if event.key_number == KEY_L:
+                if self.cursor != OpenSettingsMenu.MIN_CURSOR:
+                    self.cursor -= 1
+            if event.key_number == KEY_R:
+                if self.cursor != OpenSettingsMenu.MAX_CURSOR:
+                    self.cursor += 1
+            if event.key_number == KEY_OK:
+                if self.cursor == 7:
+                    raise MenuExit()
             self.render()
 
         time.sleep(0.1)
