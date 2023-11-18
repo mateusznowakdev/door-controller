@@ -56,6 +56,10 @@ display_buf = bytearray(DISPLAY_WIDTH * DISPLAY_HEIGHT)
 keys = Keys(pins=(board.GP13, board.GP14, board.GP15), value_when_pressed=False)
 
 
+def clamp(value, min_, max_):
+    return max(min(value, max_), min_)
+
+
 def set_default_cursor():
     display.create_char(6, CHAR_CURSOR_A0)
     display.create_char(7, CHAR_CURSOR_A1)
@@ -225,10 +229,7 @@ class OpenSettingsMenu(Menu):
         self.cursor = 0
         self.edit = False
 
-        self.start = (1, 12)
-        self.stop = (23, 34)
-        self.duration = 456
-        self.count = 56
+        self.values = [1, 12, 23, 34, 456, 56]
 
     def render(self):
         cursor_a, cursor_b = OpenSettingsMenu.CURSOR_POSITIONS[self.cursor]
@@ -236,12 +237,12 @@ class OpenSettingsMenu(Menu):
         clear_buffer()
         update_buffer((1, 0), b"  :   -   :  ")
         update_buffer((1, 1), b"   s   x  \xD0 OK")
-        update_buffer((1, 0), b"" + f"{self.start[0]:02}")
-        update_buffer((4, 0), b"" + f"{self.start[1]:02}")
-        update_buffer((9, 0), b"" + f"{self.stop[0]:02}")
-        update_buffer((12, 0), b"" + f"{self.stop[1]:02}")
-        update_buffer((1, 1), b"" + f"{self.duration:3}")
-        update_buffer((6, 1), b"" + f"{self.count:2}")
+        update_buffer((1, 0), b"" + f"{self.values[0]:02}")
+        update_buffer((4, 0), b"" + f"{self.values[1]:02}")
+        update_buffer((9, 0), b"" + f"{self.values[2]:02}")
+        update_buffer((12, 0), b"" + f"{self.values[3]:02}")
+        update_buffer((1, 1), b"" + f"{self.values[4]:3}")
+        update_buffer((6, 1), b"" + f"{self.values[5]:2}")
         update_buffer(cursor_a, b"\x06")
         update_buffer(cursor_b, b"\x07")
         send_buffer()
@@ -249,27 +250,42 @@ class OpenSettingsMenu(Menu):
     def loop(self):
         event = keys.events.get()
         if event and event.pressed:
-            if event.key_number == KEY_L:
-                if self.cursor != OpenSettingsMenu.MIN_CURSOR:
-                    self.cursor -= 1
-            if event.key_number == KEY_R:
-                if self.cursor != OpenSettingsMenu.MAX_CURSOR:
-                    self.cursor += 1
-            if event.key_number == KEY_OK:
-                if self.cursor in (0, 1, 2, 3, 4, 5):
-                    if self.edit:
-                        set_default_cursor()
-                        set_backlight(BACKLIGHT_LOW)
-                        self.edit = False
-                    else:
-                        set_alternate_cursor()
-                        set_backlight(BACKLIGHT_HIGH)
-                        self.edit = True
-                if self.cursor == 7:
-                    raise MenuExit()
+            if self.edit:
+                self._loop_edit(event)
+            else:
+                self._loop_navi(event)
             self.render()
 
         time.sleep(0.1)
+
+    def _loop_navi(self, event):
+        if event.key_number == KEY_L:
+            if self.cursor != OpenSettingsMenu.MIN_CURSOR:
+                self.cursor -= 1
+        if event.key_number == KEY_R:
+            if self.cursor != OpenSettingsMenu.MAX_CURSOR:
+                self.cursor += 1
+        if event.key_number == KEY_OK:
+            if self.cursor in (0, 1, 2, 3, 4, 5):
+                set_alternate_cursor()
+                set_backlight(BACKLIGHT_HIGH)
+                self.edit = True
+            if self.cursor == 7:
+                raise MenuExit()
+
+    def _loop_edit(self, event):
+        value = self.values[self.cursor]
+        max_value = OpenSettingsMenu.CURSOR_MAX_VALUES[self.cursor]
+
+        if self.cursor in (0, 1, 2, 3, 4, 5):
+            if event.key_number == KEY_L:
+                self.values[self.cursor] = clamp(value - 1, 0, max_value)
+            if event.key_number == KEY_R:
+                self.values[self.cursor] = clamp(value + 1, 0, max_value)
+            if event.key_number == KEY_OK:
+                set_default_cursor()
+                set_backlight(BACKLIGHT_LOW)
+                self.edit = False
 
 
 if __name__ == "__main__":
