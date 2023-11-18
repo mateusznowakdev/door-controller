@@ -1,5 +1,7 @@
 import board
+import time
 from digitalio import DigitalInOut
+from keypad import Keys
 from pwmio import PWMOut
 
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
@@ -47,6 +49,8 @@ display_bl = PWMOut(board.GP3)
 
 display_buf = bytearray(DISPLAY_WIDTH * DISPLAY_HEIGHT)
 
+keys = Keys(pins=(board.GP13, board.GP14, board.GP15), value_when_pressed=False)
+
 
 def set_backlight(percentage):
     display_bl.duty_cycle = percentage * 65535 // 100
@@ -77,14 +81,39 @@ def send_buffer():
 
 
 if __name__ == "__main__":
+    cursor = 0
+    min_cursor = 0
+    max_cursor = 6
+
+    labels = (
+        b"Open",
+        b"Close",
+        b"Set up opening",
+        b"Set up closing",
+        b"Set system time",
+        b"Event log",
+        b"Return",
+    )
+
     set_backlight(25)
 
-    clear_buffer()
-    update_buffer((1, 0), b"\x00 \x01 \x02 \x03 \x04 \xD0 \x05")
-    update_buffer((1, 1), b"Open")
-    update_buffer((0, 0), b"\x06")
-    update_buffer((2, 0), b"\x07")
-    send_buffer()
+    def refresh():
+        clear_buffer()
+        update_buffer((1, 0), b"\x00 \x01 \x02 \x03 \x04 \xD0 \x05")
+        update_buffer((1, 1), labels[cursor])
+        update_buffer((cursor * 2, 0), b"\x06")
+        update_buffer((cursor * 2 + 2, 0), b"\x07")
+        send_buffer()
 
     while True:
-        pass
+        refresh()
+
+        event = keys.events.get()
+        if event and event.pressed:
+            if event.key_number == 0 and cursor != min_cursor:
+                cursor -= 1
+            if event.key_number == 1 and cursor != max_cursor:
+                cursor += 1
+            refresh()
+
+        time.sleep(0.1)
