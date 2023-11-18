@@ -51,6 +51,10 @@ display_buf = bytearray(DISPLAY_WIDTH * DISPLAY_HEIGHT)
 
 keys = Keys(pins=(board.GP13, board.GP14, board.GP15), value_when_pressed=False)
 
+KEY_L = 0
+KEY_R = 1
+KEY_OK = 2
+
 
 def set_backlight(percentage):
     display_bl.duty_cycle = percentage * 65535 // 100
@@ -93,6 +97,15 @@ class Menu:
     def exit(self):
         pass
 
+    def _enter_submenu(self, instance):
+        try:
+            instance.enter()
+            while True:
+                instance.loop()
+        except MenuExit:
+            instance.exit()
+            self.render()
+
 
 class MenuExit(Exception):
     pass
@@ -107,14 +120,8 @@ class IdleMenu(Menu):
     def loop(self):
         event = keys.events.get()
         if event and event.pressed:
-            if event.key_number == 2:
-                try:
-                    submenu = MainMenu()
-                    submenu.enter()
-                    while True:
-                        submenu.loop()
-                except MenuExit:
-                    self.render()
+            if event.key_number == KEY_OK:
+                self._enter_submenu(MainMenu())
 
         time.sleep(0.1)
 
@@ -148,12 +155,11 @@ class MainMenu(Menu):
     def loop(self):
         event = keys.events.get()
         if event and event.pressed:
-            if event.key_number == 0 and self.cursor != MainMenu.MIN_CURSOR:
+            if event.key_number == KEY_L and self.cursor != MainMenu.MIN_CURSOR:
                 self.cursor -= 1
-            if event.key_number == 1 and self.cursor != MainMenu.MAX_CURSOR:
+            if event.key_number == KEY_R and self.cursor != MainMenu.MAX_CURSOR:
                 self.cursor += 1
-            if event.key_number == 2 and self.cursor == MainMenu.MAX_CURSOR:
-                self.exit()
+            if event.key_number == KEY_OK and self.cursor == MainMenu.MAX_CURSOR:
                 raise MenuExit()
             self.render()
 
