@@ -81,11 +81,42 @@ def send_buffer():
 
 
 class Menu:
+    def enter(self):
+        self.render()
+
     def render(self):
-        raise NotImplementedError()
+        pass
 
     def loop(self):
-        raise NotImplementedError()
+        pass
+
+    def exit(self):
+        pass
+
+
+class MenuExit(Exception):
+    pass
+
+
+class IdleMenu(Menu):
+    def render(self):
+        clear_buffer()
+        update_buffer((0, 0), b"01:23:45")
+        send_buffer()
+
+    def loop(self):
+        event = keys.events.get()
+        if event and event.pressed:
+            if event.key_number == 2:
+                try:
+                    submenu = MainMenu()
+                    submenu.enter()
+                    while True:
+                        submenu.loop()
+                except MenuExit:
+                    self.render()
+
+        time.sleep(0.1)
 
 
 class MainMenu(Menu):
@@ -121,6 +152,9 @@ class MainMenu(Menu):
                 self.cursor -= 1
             if event.key_number == 1 and self.cursor != MainMenu.MAX_CURSOR:
                 self.cursor += 1
+            if event.key_number == 2 and self.cursor == MainMenu.MAX_CURSOR:
+                self.exit()
+                raise MenuExit()
             self.render()
 
         time.sleep(0.1)
@@ -129,8 +163,8 @@ class MainMenu(Menu):
 if __name__ == "__main__":
     set_backlight(25)
 
-    menu = MainMenu()
-    menu.render()
+    menu = IdleMenu()
+    menu.enter()
 
     while True:
         menu.loop()
