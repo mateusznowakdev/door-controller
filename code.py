@@ -5,6 +5,7 @@ from keypad import Keys
 from pwmio import PWMOut
 
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
+from adafruit_datetime import datetime
 
 DISPLAY_WIDTH = 16
 DISPLAY_HEIGHT = 2
@@ -122,7 +123,7 @@ class IdleMenu(Menu):
 
     def render(self):
         clear_buffer()
-        update_buffer((0, 0), b"01:23:45")
+        update_buffer((0, 0), b"" + datetime.now().time().isoformat())
         send_buffer()
 
     def loop(self):
@@ -131,7 +132,8 @@ class IdleMenu(Menu):
             if event.key_number == KEY_OK:
                 self._enter_submenu(MainMenu())
 
-        time.sleep(0.1)
+        self.render()
+        time.sleep(1.0)
 
 
 class MainMenu(Menu):
