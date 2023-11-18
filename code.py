@@ -11,7 +11,7 @@ DISPLAY_WIDTH = 16
 DISPLAY_HEIGHT = 2
 
 BACKLIGHT_HIGH = 50
-BACKLIGHT_LOW = 25
+BACKLIGHT_LOW = 15
 BACKLIGHT_OFF = 0
 
 KEY_L = 0
@@ -29,36 +29,41 @@ display = Character_LCD_Mono(
     lines=DISPLAY_HEIGHT,
 )
 
-display.create_char(
-    0, [0b00000, 0b11000, 0b10110, 0b10001, 0b10110, 0b11000, 0b00000, 0b00000]
-)
-display.create_char(
-    1, [0b00000, 0b00011, 0b01101, 0b10001, 0b01101, 0b00011, 0b00000, 0b00000]
-)
-display.create_char(
-    2, [0b00000, 0b00100, 0b01110, 0b10101, 0b00100, 0b00100, 0b00000, 0b00000]
-)
-display.create_char(
-    3, [0b00000, 0b00100, 0b00100, 0b10101, 0b01110, 0b00100, 0b00000, 0b00000]
-)
-display.create_char(
-    4, [0b00000, 0b01110, 0b10101, 0b10111, 0b10001, 0b01110, 0b00000, 0b00000]
-)
-display.create_char(
-    5, [0b00000, 0b01000, 0b11110, 0b01001, 0b00001, 0b00110, 0b00000, 0b00000]
-)
-display.create_char(
-    6, [0b00101, 0b00000, 0b00100, 0b00000, 0b00100, 0b00000, 0b00101, 0b00000]
-)
-display.create_char(
-    7, [0b10100, 0b00000, 0b00100, 0b00000, 0b00100, 0b00000, 0b10100, 0b00000]
-)
+CHAR_PLAY = 0b00000, 0b11000, 0b10110, 0b10001, 0b10110, 0b11000, 0b00000, 0b00000
+CHAR_REWIND = 0b00000, 0b00011, 0b01101, 0b10001, 0b01101, 0b00011, 0b00000, 0b00000
+CHAR_UP = 0b00000, 0b00100, 0b01110, 0b10101, 0b00100, 0b00100, 0b00000, 0b00000
+CHAR_DOWN = 0b00000, 0b00100, 0b00100, 0b10101, 0b01110, 0b00100, 0b00000, 0b00000
+CHAR_TIME = 0b00000, 0b01110, 0b10101, 0b10111, 0b10001, 0b01110, 0b00000, 0b00000
+CHAR_BACK = 0b00000, 0b01000, 0b11110, 0b01001, 0b00001, 0b00110, 0b00000, 0b00000
+CHAR_CURSOR_A0 = 0b00101, 0b00000, 0b00100, 0b00000, 0b00100, 0b00000, 0b00101, 0b00000
+CHAR_CURSOR_A1 = 0b10100, 0b00000, 0b00100, 0b00000, 0b00100, 0b00000, 0b10100, 0b00000
+CHAR_CURSOR_B0 = 0b00111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00111, 0b00000
+CHAR_CURSOR_B1 = 0b11100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b11100, 0b00000
+
+display.create_char(0, CHAR_PLAY)
+display.create_char(1, CHAR_REWIND)
+display.create_char(2, CHAR_UP)
+display.create_char(3, CHAR_DOWN)
+display.create_char(4, CHAR_TIME)
+display.create_char(5, CHAR_BACK)
+display.create_char(6, CHAR_CURSOR_A0)
+display.create_char(7, CHAR_CURSOR_A1)
 
 display_bl = PWMOut(board.GP3)
 
 display_buf = bytearray(DISPLAY_WIDTH * DISPLAY_HEIGHT)
 
 keys = Keys(pins=(board.GP13, board.GP14, board.GP15), value_when_pressed=False)
+
+
+def set_default_cursor():
+    display.create_char(6, CHAR_CURSOR_A0)
+    display.create_char(7, CHAR_CURSOR_A1)
+
+
+def set_alternate_cursor():
+    display.create_char(6, CHAR_CURSOR_B0)
+    display.create_char(7, CHAR_CURSOR_B1)
 
 
 def set_backlight(percentage):
@@ -212,9 +217,13 @@ class OpenSettingsMenu(Menu):
         ((12, 1), (15, 1)),
     )
 
+    CURSOR_MAX_VALUES = (23, 59, 23, 59, 100, 25)
+
     def __init__(self):
         super().__init__()
+
         self.cursor = 0
+        self.edit = False
 
         self.start = (1, 12)
         self.stop = (23, 34)
@@ -247,6 +256,15 @@ class OpenSettingsMenu(Menu):
                 if self.cursor != OpenSettingsMenu.MAX_CURSOR:
                     self.cursor += 1
             if event.key_number == KEY_OK:
+                if self.cursor in (0, 1, 2, 3, 4, 5):
+                    if self.edit:
+                        set_default_cursor()
+                        set_backlight(BACKLIGHT_LOW)
+                        self.edit = False
+                    else:
+                        set_alternate_cursor()
+                        set_backlight(BACKLIGHT_HIGH)
+                        self.edit = True
                 if self.cursor == 7:
                     raise MenuExit()
             self.render()
