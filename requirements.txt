@@ -1,2 +1,2 @@
-black==23.11.0
-circup==1.5.2
+# These are the dependencies to be installed using circup
+adafruit_character_lcd==3.4.9
