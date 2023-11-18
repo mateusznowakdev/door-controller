@@ -9,6 +9,14 @@ from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 DISPLAY_WIDTH = 16
 DISPLAY_HEIGHT = 2
 
+BACKLIGHT_HIGH = 50
+BACKLIGHT_LOW = 25
+BACKLIGHT_OFF = 0
+
+KEY_L = 0
+KEY_R = 1
+KEY_OK = 2
+
 display = Character_LCD_Mono(
     rs=DigitalInOut(board.GP9),
     en=DigitalInOut(board.GP8),
@@ -50,10 +58,6 @@ display_bl = PWMOut(board.GP3)
 display_buf = bytearray(DISPLAY_WIDTH * DISPLAY_HEIGHT)
 
 keys = Keys(pins=(board.GP13, board.GP14, board.GP15), value_when_pressed=False)
-
-KEY_L = 0
-KEY_R = 1
-KEY_OK = 2
 
 
 def set_backlight(percentage):
@@ -104,7 +108,7 @@ class Menu:
                 instance.loop()
         except MenuExit:
             instance.exit()
-            self.render()
+            self.enter()
 
 
 class MenuExit(Exception):
@@ -112,6 +116,10 @@ class MenuExit(Exception):
 
 
 class IdleMenu(Menu):
+    def enter(self):
+        super().enter()
+        set_backlight(BACKLIGHT_OFF)
+
     def render(self):
         clear_buffer()
         update_buffer((0, 0), b"01:23:45")
@@ -144,6 +152,10 @@ class MainMenu(Menu):
         super().__init__()
         self.cursor = 0
 
+    def enter(self):
+        super().enter()
+        set_backlight(BACKLIGHT_LOW)
+
     def render(self):
         clear_buffer()
         update_buffer((1, 0), b"\x00 \x01 \x02 \x03 \x04 \xD0 \x05")
@@ -167,8 +179,6 @@ class MainMenu(Menu):
 
 
 if __name__ == "__main__":
-    set_backlight(25)
-
     menu = IdleMenu()
     menu.enter()
 
