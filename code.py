@@ -80,12 +80,19 @@ def send_buffer():
     display.message = "\n".join(lines)
 
 
-if __name__ == "__main__":
-    cursor = 0
-    min_cursor = 0
-    max_cursor = 6
+class Menu:
+    def render(self):
+        raise NotImplementedError()
 
-    labels = (
+    def loop(self):
+        raise NotImplementedError()
+
+
+class MainMenu(Menu):
+    MIN_CURSOR = 0
+    MAX_CURSOR = 6
+
+    LABELS = (
         b"Open",
         b"Close",
         b"Set up opening",
@@ -95,25 +102,35 @@ if __name__ == "__main__":
         b"Return",
     )
 
-    set_backlight(25)
+    def __init__(self):
+        super().__init__()
+        self.cursor = 0
 
-    def refresh():
+    def render(self):
         clear_buffer()
         update_buffer((1, 0), b"\x00 \x01 \x02 \x03 \x04 \xD0 \x05")
-        update_buffer((1, 1), labels[cursor])
-        update_buffer((cursor * 2, 0), b"\x06")
-        update_buffer((cursor * 2 + 2, 0), b"\x07")
+        update_buffer((1, 1), MainMenu.LABELS[self.cursor])
+        update_buffer((self.cursor * 2, 0), b"\x06")
+        update_buffer((self.cursor * 2 + 2, 0), b"\x07")
         send_buffer()
 
-    while True:
-        refresh()
-
+    def loop(self):
         event = keys.events.get()
         if event and event.pressed:
-            if event.key_number == 0 and cursor != min_cursor:
-                cursor -= 1
-            if event.key_number == 1 and cursor != max_cursor:
-                cursor += 1
-            refresh()
+            if event.key_number == 0 and self.cursor != MainMenu.MIN_CURSOR:
+                self.cursor -= 1
+            if event.key_number == 1 and self.cursor != MainMenu.MAX_CURSOR:
+                self.cursor += 1
+            self.render()
 
         time.sleep(0.1)
+
+
+if __name__ == "__main__":
+    set_backlight(25)
+
+    menu = MainMenu()
+    menu.render()
+
+    while True:
+        menu.loop()
