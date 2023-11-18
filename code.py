@@ -216,12 +216,23 @@ class OpenSettingsMenu(Menu):
         super().__init__()
         self.cursor = 0
 
+        self.start = (1, 12)
+        self.stop = (23, 34)
+        self.duration = 456
+        self.count = 56
+
     def render(self):
         cursor_a, cursor_b = OpenSettingsMenu.CURSOR_POSITIONS[self.cursor]
 
         clear_buffer()
-        update_buffer((1, 0), b"99:99 - 99:99")
-        update_buffer((1, 1), b"999s 99x  \xD0 OK")
+        update_buffer((1, 0), b"  :   -   :  ")
+        update_buffer((1, 1), b"   s   x  \xD0 OK")
+        update_buffer((1, 0), b"" + f"{self.start[0]:02}")
+        update_buffer((4, 0), b"" + f"{self.start[1]:02}")
+        update_buffer((9, 0), b"" + f"{self.stop[0]:02}")
+        update_buffer((12, 0), b"" + f"{self.stop[1]:02}")
+        update_buffer((1, 1), b"" + f"{self.duration:3}")
+        update_buffer((6, 1), b"" + f"{self.count:2}")
         update_buffer(cursor_a, b"\x06")
         update_buffer(cursor_b, b"\x07")
         send_buffer()
