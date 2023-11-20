@@ -140,13 +140,17 @@ class IdleMenu(BaseMenu):
         send_buffer()
 
     def loop(self) -> None:
-        event = keys.events.get()
-        if event and event.pressed:
-            if event.key_number == KEY_OK:
-                self._enter_submenu(MainMenu())
-
-        self.render()
         time.sleep(1.0)
+
+        # Screen is refreshed even if no key was pressed
+        self.render()
+
+        event = keys.events.get()
+        if not event or not event.pressed:
+            return
+
+        if event.key_number == KEY_OK:
+            self._enter_submenu(MainMenu())
 
 
 class MainMenu(BaseMenu):
@@ -195,22 +199,25 @@ class MainMenu(BaseMenu):
         send_buffer()
 
     def loop(self) -> None:
-        event = keys.events.get()
-        if event and event.pressed:
-            if event.key_number == KEY_L:
-                if self.cursor != MainMenu.MIN_CURSOR:
-                    self.cursor -= 1
-            elif event.key_number == KEY_R:
-                if self.cursor != MainMenu.MAX_CURSOR:
-                    self.cursor += 1
-            elif event.key_number == KEY_OK:
-                if self.cursor == MainMenu.SET_OPEN:
-                    self._enter_submenu(OpenMenu())
-                elif self.cursor == MainMenu.RETURN:
-                    raise MenuExit()
-            self.render()
-
         time.sleep(0.05)
+
+        event = keys.events.get()
+        if not event or not event.pressed:
+            return
+
+        if event.key_number == KEY_L:
+            if self.cursor != MainMenu.MIN_CURSOR:
+                self.cursor -= 1
+        elif event.key_number == KEY_R:
+            if self.cursor != MainMenu.MAX_CURSOR:
+                self.cursor += 1
+        elif event.key_number == KEY_OK:
+            if self.cursor == MainMenu.SET_OPEN:
+                self._enter_submenu(OpenMenu())
+            elif self.cursor == MainMenu.RETURN:
+                raise MenuExit()
+
+        self.render()
 
 
 class OpenMenu(BaseMenu):
@@ -274,28 +281,33 @@ class OpenMenu(BaseMenu):
             self._loop_navi()
 
     def _loop_navi(self) -> None:
-        event = keys.events.get()
-        if event and event.pressed:
-            if event.key_number == KEY_L:
-                if self.cursor != OpenMenu.MIN_CURSOR:
-                    self.cursor -= 1
-            elif event.key_number == KEY_R:
-                if self.cursor != OpenMenu.MAX_CURSOR:
-                    self.cursor += 1
-            elif event.key_number == KEY_OK:
-                if self.cursor in OpenMenu.FIELDS:
-                    set_alternate_cursor()
-                    set_backlight(BACKLIGHT_HIGH)
-                    self.edit = True
-                elif self.cursor == OpenMenu.RETURN:
-                    raise MenuExit()
-            self.render()
-
         time.sleep(0.05)
+
+        event = keys.events.get()
+        if not event or not event.pressed:
+            return
+
+        if event.key_number == KEY_L:
+            if self.cursor != OpenMenu.MIN_CURSOR:
+                self.cursor -= 1
+        elif event.key_number == KEY_R:
+            if self.cursor != OpenMenu.MAX_CURSOR:
+                self.cursor += 1
+        elif event.key_number == KEY_OK:
+            if self.cursor in OpenMenu.FIELDS:
+                set_alternate_cursor()
+                set_backlight(BACKLIGHT_HIGH)
+                self.edit = True
+            elif self.cursor == OpenMenu.RETURN:
+                raise MenuExit()
+
+        self.render()
 
     def _loop_edit(self) -> None:
         if self.cursor not in OpenMenu.FIELDS:
             return
+
+        time.sleep(0.05)
 
         value = self.values[self.cursor]
         low, hi = OpenMenu.CURSOR_MIN_MAX_VALUES[self.cursor]
@@ -313,20 +325,21 @@ class OpenMenu(BaseMenu):
                 set_default_cursor()
                 set_backlight(BACKLIGHT_LOW)
                 self.edit = False
-            self.render()
         elif event and event.released:
             self.key_number = None
             self.key_timestamp = 0
         elif self.key_number is not None:
             diff = time.monotonic() - self.key_timestamp
-            if diff >= 1.0:
-                if self.key_number == KEY_L:
-                    self.values[self.cursor] = clamp(value - int(diff), low, hi)
-                elif self.key_number == KEY_R:
-                    self.values[self.cursor] = clamp(value + int(diff), low, hi)
-                self.render()
+            if diff < 1.0:
+                return
 
-        time.sleep(0.05)
+            if self.key_number == KEY_L:
+                self.values[self.cursor] = clamp(value - int(diff), low, hi)
+            elif self.key_number == KEY_R:
+                self.values[self.cursor] = clamp(value + int(diff), low, hi)
+
+        if self.key_number is not None:
+            self.render()
 
 
 if __name__ == "__main__":
