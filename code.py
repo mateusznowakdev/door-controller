@@ -18,8 +18,8 @@ class Display:
 
     CHAR_PLAY = 0b00000, 0b11000, 0b10110, 0b10001, 0b10110, 0b11000, 0b00000, 0b00000
     CHAR_REWIND = 0b00000, 0b00011, 0b01101, 0b10001, 0b01101, 0b00011, 0b00000, 0b00000
-    CHAR_UP = 0b00000, 0b00100, 0b01110, 0b10101, 0b00100, 0b00100, 0b00000, 0b00000
-    CHAR_DOWN = 0b00000, 0b00100, 0b00100, 0b10101, 0b01110, 0b00100, 0b00000, 0b00000
+    CHAR_MENU = 0b00000, 0b01110, 0b00000, 0b01110, 0b00000, 0b01110, 0b00000, 0b00000
+    CHAR_CHECK = 0b00000, 0b00001, 0b00010, 0b00100, 0b10100, 0b01000, 0b00000, 0b00000
     CHAR_TIME = 0b00000, 0b01110, 0b10101, 0b10111, 0b10001, 0b01110, 0b00000, 0b00000
     CHAR_BACK = 0b00000, 0b01000, 0b11110, 0b01001, 0b00001, 0b00110, 0b00000, 0b00000
     CHAR_CUR_A0 = 0b00101, 0b00000, 0b00100, 0b00000, 0b00100, 0b00000, 0b00101, 0b00000
@@ -40,8 +40,8 @@ class Display:
         )
         self._display.create_char(0, Display.CHAR_PLAY)
         self._display.create_char(1, Display.CHAR_REWIND)
-        self._display.create_char(2, Display.CHAR_UP)
-        self._display.create_char(3, Display.CHAR_DOWN)
+        self._display.create_char(2, Display.CHAR_MENU)
+        self._display.create_char(3, Display.CHAR_CHECK)
         self._display.create_char(4, Display.CHAR_TIME)
         self._display.create_char(5, Display.CHAR_BACK)
         self._display.create_char(6, Display.CHAR_CUR_A0)
@@ -225,7 +225,7 @@ class MainMenu(BaseMenu):
         cursor_a, cursor_b = MainMenu.CURSOR_POSITIONS[self.cursor]
 
         display.clear()
-        display.write((1, 0), b"\x00 \x01 \x02 \x03 \x04 \xD0 \x05")
+        display.write((1, 0), b"\x00 \x01 \x7E \x7F \x04 \x02 \x05")
         display.write((1, 1), MainMenu.CURSOR_LABELS[self.cursor])
         display.write(cursor_a, b"\x06")
         display.write(cursor_b, b"\x07")
@@ -266,8 +266,8 @@ class OpenMenu(BaseMenu):
         ((11, 0), (14, 0)),
         ((0, 1), (5, 1)),
         ((5, 1), (9, 1)),
-        ((10, 1), (12, 1)),
-        ((12, 1), (15, 1)),
+        ((11, 1), (13, 1)),
+        ((13, 1), (15, 1)),
     )
 
     CURSOR_MIN_MAX_VALUES = (
@@ -292,7 +292,7 @@ class OpenMenu(BaseMenu):
 
         display.clear()
         display.write((1, 0), b"  :   -   :  ")
-        display.write((1, 1), b"   s   x  \xD0 OK")
+        display.write((1, 1), b"   s   x   \x02 \x03")
         display.write((1, 0), f"{self.values[0]:02}".encode())
         display.write((4, 0), f"{self.values[1]:02}".encode())
         display.write((9, 0), f"{self.values[2]:02}".encode())
