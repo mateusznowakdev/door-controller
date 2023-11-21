@@ -18,7 +18,7 @@ extra_standard_library = ["board", "digitalio", "keypad", "pwmio"]
 profile = "black"
 
 [tool.pylint]
-disable = ["import-error", "missing-class-docstring", "missing-function-docstring", "missing-module-docstring", "wrong-import-order"]
+disable = ["import-error", "missing-class-docstring", "missing-function-docstring", "missing-module-docstring", "no-else-return", "too-few-public-methods", "wrong-import-order"]
 
 [build-system]
 requires = ["poetry-core"]
