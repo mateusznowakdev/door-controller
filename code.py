@@ -177,10 +177,10 @@ class IdleMenu(BaseMenu):
         display.flush()
 
     def loop(self) -> None:
-        time.sleep(1.0)
+        time.sleep(0.5)
 
-        key, _ = keys.get()
-        if key == Keys.ENTER:
+        key, duration = keys.get()
+        if key == Keys.LEFT and duration > 3.0:
             self._enter_submenu(MainMenu())
 
         self.render()
