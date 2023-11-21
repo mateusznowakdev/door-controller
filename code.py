@@ -7,51 +7,90 @@ from pwmio import PWMOut
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 from adafruit_datetime import datetime
 
-DISPLAY_WIDTH = 16
-DISPLAY_HEIGHT = 2
 
-BACKLIGHT_HIGH = 50
-BACKLIGHT_LOW = 15
-BACKLIGHT_OFF = 0
+class Display:
+    WIDTH = 16
+    HEIGHT = 2
+
+    BACKLIGHT_HIGH = 50
+    BACKLIGHT_LOW = 15
+    BACKLIGHT_OFF = 0
+
+    CHAR_PLAY = 0b00000, 0b11000, 0b10110, 0b10001, 0b10110, 0b11000, 0b00000, 0b00000
+    CHAR_REWIND = 0b00000, 0b00011, 0b01101, 0b10001, 0b01101, 0b00011, 0b00000, 0b00000
+    CHAR_UP = 0b00000, 0b00100, 0b01110, 0b10101, 0b00100, 0b00100, 0b00000, 0b00000
+    CHAR_DOWN = 0b00000, 0b00100, 0b00100, 0b10101, 0b01110, 0b00100, 0b00000, 0b00000
+    CHAR_TIME = 0b00000, 0b01110, 0b10101, 0b10111, 0b10001, 0b01110, 0b00000, 0b00000
+    CHAR_BACK = 0b00000, 0b01000, 0b11110, 0b01001, 0b00001, 0b00110, 0b00000, 0b00000
+    CHAR_CUR_A0 = 0b00101, 0b00000, 0b00100, 0b00000, 0b00100, 0b00000, 0b00101, 0b00000
+    CHAR_CUR_A1 = 0b10100, 0b00000, 0b00100, 0b00000, 0b00100, 0b00000, 0b10100, 0b00000
+    CHAR_CUR_B0 = 0b00111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00111, 0b00000
+    CHAR_CUR_B1 = 0b11100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b11100, 0b00000
+
+    def __init__(self) -> None:
+        self._display = Character_LCD_Mono(
+            rs=DigitalInOut(board.GP9),
+            en=DigitalInOut(board.GP8),
+            db4=DigitalInOut(board.GP7),
+            db5=DigitalInOut(board.GP6),
+            db6=DigitalInOut(board.GP5),
+            db7=DigitalInOut(board.GP4),
+            columns=Display.WIDTH,
+            lines=Display.HEIGHT,
+        )
+        self._display.create_char(0, Display.CHAR_PLAY)
+        self._display.create_char(1, Display.CHAR_REWIND)
+        self._display.create_char(2, Display.CHAR_UP)
+        self._display.create_char(3, Display.CHAR_DOWN)
+        self._display.create_char(4, Display.CHAR_TIME)
+        self._display.create_char(5, Display.CHAR_BACK)
+        self._display.create_char(6, Display.CHAR_CUR_A0)
+        self._display.create_char(7, Display.CHAR_CUR_A1)
+
+        self._buffer = bytearray(b" " * Display.WIDTH * Display.HEIGHT)
+        self.clear()
+
+        self._backlight = PWMOut(board.GP3)
+
+    def clear(self) -> None:
+        self._buffer[:] = b" " * len(self._buffer)
+
+    def write(self, pos: tuple[int, int], data: bytes) -> None:
+        col, row = pos
+        byte_id = row * Display.WIDTH + col
+
+        self._buffer[byte_id : byte_id + len(data)] = data
+
+    def flush(self) -> None:
+        lines = []
+
+        for row in range(0, Display.HEIGHT):
+            first_byte_id = row * Display.WIDTH
+            last_byte_id = (row + 1) * Display.WIDTH
+
+            line = "".join(chr(b) for b in self._buffer[first_byte_id:last_byte_id])
+            lines.append(line)
+
+        self._display.message = "\n".join(lines)
+
+    def set_default_cursor(self) -> None:
+        self._display.create_char(6, Display.CHAR_CUR_A0)
+        self._display.create_char(7, Display.CHAR_CUR_A1)
+
+    def set_alternate_cursor(self) -> None:
+        self._display.create_char(6, Display.CHAR_CUR_B0)
+        self._display.create_char(7, Display.CHAR_CUR_B1)
+
+    def set_backlight(self, value: int) -> None:
+        self._backlight.duty_cycle = value * 65535 // 100
+
+
+display = Display()
+
 
 KEY_L = 0
 KEY_R = 1
 KEY_OK = 2
-
-display = Character_LCD_Mono(
-    rs=DigitalInOut(board.GP9),
-    en=DigitalInOut(board.GP8),
-    db4=DigitalInOut(board.GP7),
-    db5=DigitalInOut(board.GP6),
-    db6=DigitalInOut(board.GP5),
-    db7=DigitalInOut(board.GP4),
-    columns=DISPLAY_WIDTH,
-    lines=DISPLAY_HEIGHT,
-)
-
-CHAR_PLAY = 0b00000, 0b11000, 0b10110, 0b10001, 0b10110, 0b11000, 0b00000, 0b00000
-CHAR_REWIND = 0b00000, 0b00011, 0b01101, 0b10001, 0b01101, 0b00011, 0b00000, 0b00000
-CHAR_UP = 0b00000, 0b00100, 0b01110, 0b10101, 0b00100, 0b00100, 0b00000, 0b00000
-CHAR_DOWN = 0b00000, 0b00100, 0b00100, 0b10101, 0b01110, 0b00100, 0b00000, 0b00000
-CHAR_TIME = 0b00000, 0b01110, 0b10101, 0b10111, 0b10001, 0b01110, 0b00000, 0b00000
-CHAR_BACK = 0b00000, 0b01000, 0b11110, 0b01001, 0b00001, 0b00110, 0b00000, 0b00000
-CHAR_CURSOR_A0 = 0b00101, 0b00000, 0b00100, 0b00000, 0b00100, 0b00000, 0b00101, 0b00000
-CHAR_CURSOR_A1 = 0b10100, 0b00000, 0b00100, 0b00000, 0b00100, 0b00000, 0b10100, 0b00000
-CHAR_CURSOR_B0 = 0b00111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00111, 0b00000
-CHAR_CURSOR_B1 = 0b11100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b11100, 0b00000
-
-display.create_char(0, CHAR_PLAY)
-display.create_char(1, CHAR_REWIND)
-display.create_char(2, CHAR_UP)
-display.create_char(3, CHAR_DOWN)
-display.create_char(4, CHAR_TIME)
-display.create_char(5, CHAR_BACK)
-display.create_char(6, CHAR_CURSOR_A0)
-display.create_char(7, CHAR_CURSOR_A1)
-
-display_bl = PWMOut(board.GP3)
-
-display_buf = bytearray(DISPLAY_WIDTH * DISPLAY_HEIGHT)
 
 keys = Keys(
     pins=(board.GP13, board.GP14, board.GP15),
@@ -62,44 +101,6 @@ keys = Keys(
 
 def clamp(value: int, low: int, hi: int) -> int:
     return max(min(value, hi), low)
-
-
-def set_default_cursor() -> None:
-    display.create_char(6, CHAR_CURSOR_A0)
-    display.create_char(7, CHAR_CURSOR_A1)
-
-
-def set_alternate_cursor() -> None:
-    display.create_char(6, CHAR_CURSOR_B0)
-    display.create_char(7, CHAR_CURSOR_B1)
-
-
-def set_backlight(percentage: int) -> None:
-    display_bl.duty_cycle = percentage * 65535 // 100
-
-
-def clear_buffer() -> None:
-    display_buf[:] = b" " * len(display_buf)
-
-
-def update_buffer(pos: tuple[int, int], data: bytes) -> None:
-    col, row = pos
-    byte_id = row * DISPLAY_WIDTH + col
-
-    display_buf[byte_id : byte_id + len(data)] = data
-
-
-def send_buffer() -> None:
-    lines = []
-
-    for row in range(0, DISPLAY_HEIGHT):
-        first_byte_id = row * DISPLAY_WIDTH
-        last_byte_id = (row + 1) * DISPLAY_WIDTH
-
-        line = "".join(chr(b) for b in display_buf[first_byte_id:last_byte_id])
-        lines.append(line)
-
-    display.message = "\n".join(lines)
 
 
 class BaseMenu:
@@ -132,12 +133,12 @@ class MenuExit(Exception):
 class IdleMenu(BaseMenu):
     def enter(self) -> None:
         super().enter()
-        set_backlight(BACKLIGHT_OFF)
+        display.set_backlight(Display.BACKLIGHT_OFF)
 
     def render(self) -> None:
-        clear_buffer()
-        update_buffer((0, 0), b"" + datetime.now().time().isoformat())
-        send_buffer()
+        display.clear()
+        display.write((0, 0), b"" + datetime.now().time().isoformat())
+        display.flush()
 
     def loop(self) -> None:
         time.sleep(1.0)
@@ -186,17 +187,17 @@ class MainMenu(BaseMenu):
 
     def enter(self) -> None:
         super().enter()
-        set_backlight(BACKLIGHT_LOW)
+        display.set_backlight(Display.BACKLIGHT_LOW)
 
     def render(self) -> None:
         cursor_a, cursor_b = MainMenu.CURSOR_POSITIONS[self.cursor]
 
-        clear_buffer()
-        update_buffer((1, 0), b"\x00 \x01 \x02 \x03 \x04 \xD0 \x05")
-        update_buffer((1, 1), MainMenu.CURSOR_LABELS[self.cursor])
-        update_buffer(cursor_a, b"\x06")
-        update_buffer(cursor_b, b"\x07")
-        send_buffer()
+        display.clear()
+        display.write((1, 0), b"\x00 \x01 \x02 \x03 \x04 \xD0 \x05")
+        display.write((1, 1), MainMenu.CURSOR_LABELS[self.cursor])
+        display.write(cursor_a, b"\x06")
+        display.write(cursor_b, b"\x07")
+        display.flush()
 
     def loop(self) -> None:
         time.sleep(0.05)
@@ -261,18 +262,18 @@ class OpenMenu(BaseMenu):
     def render(self) -> None:
         cursor_a, cursor_b = OpenMenu.CURSOR_POSITIONS[self.cursor]
 
-        clear_buffer()
-        update_buffer((1, 0), b"  :   -   :  ")
-        update_buffer((1, 1), b"   s   x  \xD0 OK")
-        update_buffer((1, 0), f"{self.values[0]:02}".encode())
-        update_buffer((4, 0), f"{self.values[1]:02}".encode())
-        update_buffer((9, 0), f"{self.values[2]:02}".encode())
-        update_buffer((12, 0), f"{self.values[3]:02}".encode())
-        update_buffer((1, 1), f"{self.values[4]:3}".encode())
-        update_buffer((6, 1), f"{self.values[5]:2}".encode())
-        update_buffer(cursor_a, b"\x06")
-        update_buffer(cursor_b, b"\x07")
-        send_buffer()
+        display.clear()
+        display.write((1, 0), b"  :   -   :  ")
+        display.write((1, 1), b"   s   x  \xD0 OK")
+        display.write((1, 0), f"{self.values[0]:02}".encode())
+        display.write((4, 0), f"{self.values[1]:02}".encode())
+        display.write((9, 0), f"{self.values[2]:02}".encode())
+        display.write((12, 0), f"{self.values[3]:02}".encode())
+        display.write((1, 1), f"{self.values[4]:3}".encode())
+        display.write((6, 1), f"{self.values[5]:2}".encode())
+        display.write(cursor_a, b"\x06")
+        display.write(cursor_b, b"\x07")
+        display.flush()
 
     def loop(self) -> None:
         if self.edit:
@@ -295,8 +296,8 @@ class OpenMenu(BaseMenu):
                 self.cursor += 1
         elif event.key_number == KEY_OK:
             if self.cursor in OpenMenu.FIELDS:
-                set_alternate_cursor()
-                set_backlight(BACKLIGHT_HIGH)
+                display.set_alternate_cursor()
+                display.set_backlight(Display.BACKLIGHT_HIGH)
                 self.edit = True
             elif self.cursor == OpenMenu.RETURN:
                 raise MenuExit()
@@ -322,8 +323,8 @@ class OpenMenu(BaseMenu):
             elif event.key_number == KEY_R:
                 self.values[self.cursor] = clamp(value + 1, low, hi)
             elif event.key_number == KEY_OK:
-                set_default_cursor()
-                set_backlight(BACKLIGHT_LOW)
+                display.set_default_cursor()
+                display.set_backlight(Display.BACKLIGHT_LOW)
                 self.edit = False
         elif event and event.released:
             self.key_number = None
