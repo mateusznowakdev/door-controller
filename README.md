@@ -2,8 +2,9 @@
 
 - Install CircuitPython on Raspberry Pi Pico
 - Install `circup`
+- Download `mpy-cross` binary for CircuitPython
 - Use `circup install -r requirements.txt` to install dependencies
-- Use `bash upload.sh` to upload the code
+- Use `bash upload.sh` to build and upload the code
 
 ## Usage
 
