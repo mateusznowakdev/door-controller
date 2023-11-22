@@ -353,7 +353,7 @@ class OpenMenu(BaseMenu):
             self.render()
 
 
-if __name__ == "__main__":
+def main() -> None:
     menu = IdleMenu()
     menu.enter()
 
