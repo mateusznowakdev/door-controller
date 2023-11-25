@@ -24,4 +24,4 @@ then
 fi
 
 ./mpy-cross main.py
-cp boot.py code.py main.mpy safemode.py "$CPY_HOME"
+cp -v boot.py code.py main.mpy safemode.py "$CPY_HOME"

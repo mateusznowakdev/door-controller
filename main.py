@@ -1,11 +1,30 @@
 import board
 import keypad
 import time
-from digitalio import DigitalInOut
+from digitalio import DigitalInOut, Direction
 from pwmio import PWMOut
 
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 from adafruit_datetime import datetime
+
+
+class Motor:
+    def __init__(self) -> None:
+        self._motor_f = DigitalInOut(board.GP18)
+        self._motor_f.direction = Direction.OUTPUT
+
+        self._motor_b = DigitalInOut(board.GP19)
+        self._motor_b.direction = Direction.OUTPUT
+
+    def start(self, duration: float) -> None:
+        self._motor_f.value = True
+        time.sleep(duration)
+        self._motor_f.value = False
+
+    def stop(self, duration: float) -> None:
+        self._motor_b.value = True
+        time.sleep(duration)
+        self._motor_b.value = False
 
 
 class Display:
@@ -133,6 +152,7 @@ class Keys:
 
 display = Display()
 keys = Keys()
+motor = Motor()
 
 
 def clamp(value: int, low: int, hi: int) -> int:
@@ -190,6 +210,7 @@ class MainMenu(BaseMenu):
     MIN_CURSOR = 0
     MAX_CURSOR = 6
 
+    OPEN = 0
     SET_OPEN = 2
     RETURN = 6
 
@@ -242,6 +263,12 @@ class MainMenu(BaseMenu):
             if self.cursor != MainMenu.MAX_CURSOR:
                 self.cursor += 1
         elif key == Keys.ENTER:
+            if self.cursor == MainMenu.OPEN:
+                display.set_backlight(Display.BACKLIGHT_HIGH)
+                display.set_alternate_cursor()
+                motor.start(2.0)
+                display.set_backlight(Display.BACKLIGHT_LOW)
+                display.set_default_cursor()
             if self.cursor == MainMenu.SET_OPEN:
                 self._enter_submenu(OpenMenu())
             elif self.cursor == MainMenu.RETURN:
