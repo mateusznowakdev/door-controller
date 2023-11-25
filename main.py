@@ -160,6 +160,9 @@ def clamp(value: int, low: int, hi: int) -> int:
 
 
 class BaseMenu:
+    def __init__(self) -> None:
+        self._edit = False
+
     def enter(self) -> None:
         self.render()
 
@@ -167,6 +170,15 @@ class BaseMenu:
         pass
 
     def loop(self) -> None:
+        if self._edit:
+            self.loop_edit()
+        else:
+            self.loop_navi()
+
+    def loop_navi(self) -> None:
+        pass
+
+    def loop_edit(self) -> None:
         pass
 
     def exit(self) -> None:
@@ -180,6 +192,16 @@ class BaseMenu:
         except MenuExit:
             instance.exit()
             self.enter()
+
+    def _enter_edit_mode(self) -> None:
+        display.set_backlight(Display.BACKLIGHT_HIGH)
+        display.set_alternate_cursor()
+        self._edit = True
+
+    def _leave_edit_mode(self) -> None:
+        self._edit = False
+        display.set_backlight(Display.BACKLIGHT_LOW)
+        display.set_default_cursor()
 
 
 class MenuExit(Exception):
@@ -196,7 +218,7 @@ class IdleMenu(BaseMenu):
         display.write((0, 0), b"" + datetime.now().time().isoformat())
         display.flush()
 
-    def loop(self) -> None:
+    def loop_navi(self) -> None:
         time.sleep(0.5)
 
         key, duration = keys.get()
@@ -252,7 +274,7 @@ class MainMenu(BaseMenu):
         display.write(cursor_b, b"\x07")
         display.flush()
 
-    def loop(self) -> None:
+    def loop_navi(self) -> None:
         time.sleep(0.05)
 
         key, _ = keys.get()
@@ -264,11 +286,10 @@ class MainMenu(BaseMenu):
                 self.cursor += 1
         elif key == Keys.ENTER:
             if self.cursor == MainMenu.OPEN:
-                display.set_backlight(Display.BACKLIGHT_HIGH)
-                display.set_alternate_cursor()
+                # TODO: handle in loop_edit
+                self._enter_edit_mode()
                 motor.start(2.0)
-                display.set_backlight(Display.BACKLIGHT_LOW)
-                display.set_default_cursor()
+                self._leave_edit_mode()
             if self.cursor == MainMenu.SET_OPEN:
                 self._enter_submenu(OpenMenu())
             elif self.cursor == MainMenu.RETURN:
@@ -310,8 +331,6 @@ class OpenMenu(BaseMenu):
         super().__init__()
 
         self.cursor = 0
-        self.edit = False
-
         self.values = [1, 12, 23, 34, 456, 56]
 
     def render(self) -> None:
@@ -330,13 +349,7 @@ class OpenMenu(BaseMenu):
         display.write(cursor_b, b"\x07")
         display.flush()
 
-    def loop(self) -> None:
-        if self.edit:
-            self._loop_edit()
-        else:
-            self._loop_navi()
-
-    def _loop_navi(self) -> None:
+    def loop_navi(self) -> None:
         time.sleep(0.05)
 
         key, _ = keys.get()
@@ -348,16 +361,14 @@ class OpenMenu(BaseMenu):
                 self.cursor += 1
         elif key == Keys.ENTER:
             if self.cursor in OpenMenu.FIELDS:
-                display.set_alternate_cursor()
-                display.set_backlight(Display.BACKLIGHT_HIGH)
-                self.edit = True
+                self._enter_edit_mode()
             elif self.cursor == OpenMenu.RETURN:
                 raise MenuExit()
 
         if key is not None:
             self.render()
 
-    def _loop_edit(self) -> None:
+    def loop_edit(self) -> None:
         if self.cursor not in OpenMenu.FIELDS:
             return
 
@@ -372,9 +383,7 @@ class OpenMenu(BaseMenu):
         elif key == Keys.RIGHT:
             self.values[self.cursor] = clamp(value + int(duration or 1), low, hi)
         elif key == Keys.ENTER:
-            display.set_default_cursor()
-            display.set_backlight(Display.BACKLIGHT_LOW)
-            self.edit = False
+            self._leave_edit_mode()
 
         if key is not None:
             self.render()
