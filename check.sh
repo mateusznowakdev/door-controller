@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-black . && isort . && pylint code.py
+black . && isort . && pylint *.py
