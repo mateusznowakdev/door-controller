@@ -24,4 +24,10 @@ then
 fi
 
 ./mpy-cross main.py
-cp -v boot.py code.py main.mpy safemode.py "$CPY_HOME"
+
+if [[ $1 == "--full" ]]
+then
+  cp -v boot.py code.py main.mpy safemode.py "$CPY_HOME"
+else
+  cp -uv boot.py code.py main.mpy safemode.py "$CPY_HOME"
+fi
