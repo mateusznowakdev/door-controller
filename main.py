@@ -70,6 +70,7 @@ class Display:
         self.clear()
 
         self._backlight = PWMOut(board.GP3)
+        self.set_backlight(Display.BACKLIGHT_OFF)
 
     def clear(self) -> None:
         self._buffer[:] = b" " * len(self._buffer)
@@ -159,32 +160,95 @@ def clamp(value: int, low: int, hi: int) -> int:
     return max(min(value, hi), low)
 
 
-class BaseMenu:
+class MenuExit(Exception):
+    pass
+
+
+class Menu:
+    CURSORS = ()
+    MIN_MAX_VALUES = ()
+
     def __init__(self) -> None:
-        self._edit = False
+        self.data = []
+        self.pos = 0
+        self.edit = False
+
+    def get_cursor(self) -> tuple[tuple[int, int], tuple[int, int]]:
+        return self.CURSORS[self.pos]
+
+    def get_min_max_values(self) -> tuple[int, int]:
+        return self.MIN_MAX_VALUES[self.pos]
+
+    def render(self) -> None:
+        display.clear()
+        display.write((0, 0), b"???")
+        display.flush()
 
     def enter(self) -> None:
         self.render()
 
-    def render(self) -> None:
-        pass
-
     def loop(self) -> None:
-        if self._edit:
+        if self.edit:
             self.loop_edit()
         else:
             self.loop_navi()
 
     def loop_navi(self) -> None:
-        pass
+        time.sleep(0.05)
+
+        key, duration = keys.get()
+        if key == Keys.LEFT:
+            self.loop_navi_left(duration)
+        elif key == Keys.RIGHT:
+            self.loop_navi_right(duration)
+        elif key == Keys.ENTER:
+            self.loop_navi_enter(duration)
+
+        if key is not None:
+            self.render()
+
+    def loop_navi_left(self, duration: float) -> None:
+        _ = duration
+        self.pos = clamp(self.pos - 1, 0, len(self.CURSORS) - 1)
+
+    def loop_navi_right(self, duration: float) -> None:
+        _ = duration
+        self.pos = clamp(self.pos + 1, 0, len(self.CURSORS) - 1)
+
+    def loop_navi_enter(self, duration: float) -> None:
+        _ = duration
+        self._enter_edit_mode()
 
     def loop_edit(self) -> None:
-        pass
+        time.sleep(0.05)
+
+        key, duration = keys.get()
+        if key == Keys.LEFT:
+            self.loop_edit_left(duration)
+        elif key == Keys.RIGHT:
+            self.loop_edit_right(duration)
+        elif key == Keys.ENTER:
+            self.loop_edit_enter(duration)
+
+        if key is not None:
+            self.render()
+
+    def loop_edit_left(self, duration: float) -> None:
+        lo, hi = self.MIN_MAX_VALUES[self.pos]
+        self.data[self.pos] = clamp(self.data[self.pos] - int(duration or 1), lo, hi)
+
+    def loop_edit_right(self, duration: float) -> None:
+        lo, hi = self.MIN_MAX_VALUES[self.pos]
+        self.data[self.pos] = clamp(self.data[self.pos] + int(duration or 1), lo, hi)
+
+    def loop_edit_enter(self, duration: float) -> None:
+        _ = duration
+        self._leave_edit_mode()
 
     def exit(self) -> None:
         pass
 
-    def _enter_submenu(self, instance: "BaseMenu") -> None:
+    def _enter_submenu(self, instance: "Menu") -> None:
         try:
             instance.enter()
             while True:
@@ -196,47 +260,40 @@ class BaseMenu:
     def _enter_edit_mode(self) -> None:
         display.set_backlight(Display.BACKLIGHT_HIGH)
         display.set_alternate_cursor()
-        self._edit = True
+        self.edit = True
 
     def _leave_edit_mode(self) -> None:
-        self._edit = False
+        self.edit = False
         display.set_backlight(Display.BACKLIGHT_LOW)
         display.set_default_cursor()
 
 
-class MenuExit(Exception):
-    pass
-
-
-class IdleMenu(BaseMenu):
-    def enter(self) -> None:
-        super().enter()
-        display.set_backlight(Display.BACKLIGHT_OFF)
-
+class IdleMenu(Menu):
     def render(self) -> None:
         display.clear()
         display.write((0, 0), b"" + datetime.now().time().isoformat())
         display.flush()
 
     def loop_navi(self) -> None:
-        time.sleep(0.5)
+        super().loop_navi()
 
-        key, duration = keys.get()
-        if key == Keys.LEFT and duration > 3.0:
+        # time should be refreshed even if there is no input
+        self.render()
+        time.sleep(0.9)
+
+    def loop_navi_left(self, duration: float) -> None:
+        if duration > 3.0:
             self._enter_submenu(MainMenu())
 
-        self.render()
+    def loop_navi_right(self, duration: float) -> None:
+        return
+
+    def loop_navi_enter(self, duration: float) -> None:
+        return
 
 
-class MainMenu(BaseMenu):
-    MIN_CURSOR = 0
-    MAX_CURSOR = 6
-
-    OPEN = 0
-    SET_OPEN = 2
-    RETURN = 6
-
-    CURSOR_POSITIONS = (
+class MainMenu(Menu):
+    CURSORS = (
         ((0, 0), (2, 0)),
         ((2, 0), (4, 0)),
         ((4, 0), (6, 0)),
@@ -246,7 +303,7 @@ class MainMenu(BaseMenu):
         ((12, 0), (14, 0)),
     )
 
-    CURSOR_LABELS = (
+    LABELS = (
         b"Open",
         b"Close",
         b"Set up opening",
@@ -256,58 +313,50 @@ class MainMenu(BaseMenu):
         b"Return",
     )
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.cursor = 0
+    ID_OPEN = 0
+    ID_SET_OPEN = 2
+    ID_RETURN = 6
+
+    def get_label(self) -> bytes:
+        return self.LABELS[self.pos]
 
     def enter(self) -> None:
         super().enter()
         display.set_backlight(Display.BACKLIGHT_LOW)
 
     def render(self) -> None:
-        cursor_a, cursor_b = MainMenu.CURSOR_POSITIONS[self.cursor]
+        ca, cb = self.get_cursor()
+        label = self.get_label()
 
         display.clear()
         display.write((1, 0), b"\x00 \x01 \x7E \x7F \x04 \x02 \x05")
-        display.write((1, 1), MainMenu.CURSOR_LABELS[self.cursor])
-        display.write(cursor_a, b"\x06")
-        display.write(cursor_b, b"\x07")
+        display.write((1, 1), label)
+        display.write(ca, b"\x06")
+        display.write(cb, b"\x07")
         display.flush()
 
-    def loop_navi(self) -> None:
-        time.sleep(0.05)
+    def loop_navi_enter(self, duration: float) -> None:
+        if self.pos == self.ID_OPEN:
+            super().loop_navi_enter(duration)
+        elif self.pos == self.ID_SET_OPEN:
+            self._enter_submenu(OpenMenu())
+        elif self.pos == self.ID_RETURN:
+            raise MenuExit()
 
-        key, _ = keys.get()
-        if key == Keys.LEFT:
-            if self.cursor != MainMenu.MIN_CURSOR:
-                self.cursor -= 1
-        elif key == Keys.RIGHT:
-            if self.cursor != MainMenu.MAX_CURSOR:
-                self.cursor += 1
-        elif key == Keys.ENTER:
-            if self.cursor == MainMenu.OPEN:
-                # TODO: handle in loop_edit
-                self._enter_edit_mode()
-                motor.start(2.0)
-                self._leave_edit_mode()
-            if self.cursor == MainMenu.SET_OPEN:
-                self._enter_submenu(OpenMenu())
-            elif self.cursor == MainMenu.RETURN:
-                raise MenuExit()
+    def loop_edit(self) -> None:
+        if self.pos == self.ID_OPEN:
+            motor.start(2.0)
+            self._leave_edit_mode()
+        else:
+            super().loop_navi()
 
-        if key is not None:
-            self.render()
+    def exit(self) -> None:
+        super().exit()
+        display.set_backlight(Display.BACKLIGHT_OFF)
 
 
-class OpenMenu(BaseMenu):
-    MIN_CURSOR = 0
-    MAX_CURSOR = 7
-
-    FIELDS = (0, 1, 2, 3, 4, 5)
-    PREVIEW = 6
-    RETURN = 7
-
-    CURSOR_POSITIONS = (
+class OpenMenu(Menu):
+    CURSORS = (
         ((0, 0), (3, 0)),
         ((3, 0), (6, 0)),
         ((8, 0), (11, 0)),
@@ -318,75 +367,45 @@ class OpenMenu(BaseMenu):
         ((13, 1), (15, 1)),
     )
 
-    CURSOR_MIN_MAX_VALUES = (
+    MIN_MAX_VALUES = (
         (0, 23),
         (0, 59),
         (0, 23),
         (0, 59),
-        (0, 900),
-        (0, 30),
+        (0, 500),
+        (0, 20),
     )
+
+    ID_PREVIEW = 6
+    ID_RETURN = 7
 
     def __init__(self) -> None:
         super().__init__()
-
-        self.cursor = 0
-        self.values = [1, 12, 23, 34, 456, 56]
+        self.data = [1, 12, 23, 34, 456, 56]
 
     def render(self) -> None:
-        cursor_a, cursor_b = OpenMenu.CURSOR_POSITIONS[self.cursor]
+        ca, cb = self.get_cursor()
 
         display.clear()
         display.write((1, 0), b"  :   -   :  ")
         display.write((1, 1), b"   s   x   \x02 \x03")
-        display.write((1, 0), f"{self.values[0]:02}".encode())
-        display.write((4, 0), f"{self.values[1]:02}".encode())
-        display.write((9, 0), f"{self.values[2]:02}".encode())
-        display.write((12, 0), f"{self.values[3]:02}".encode())
-        display.write((1, 1), f"{self.values[4]:3}".encode())
-        display.write((6, 1), f"{self.values[5]:2}".encode())
-        display.write(cursor_a, b"\x06")
-        display.write(cursor_b, b"\x07")
+        display.write((1, 0), f"{self.data[0]:02}".encode())
+        display.write((4, 0), f"{self.data[1]:02}".encode())
+        display.write((9, 0), f"{self.data[2]:02}".encode())
+        display.write((12, 0), f"{self.data[3]:02}".encode())
+        display.write((1, 1), f"{self.data[4]:3}".encode())
+        display.write((6, 1), f"{self.data[5]:2}".encode())
+        display.write(ca, b"\x06")
+        display.write(cb, b"\x07")
         display.flush()
 
-    def loop_navi(self) -> None:
-        time.sleep(0.05)
-
-        key, _ = keys.get()
-        if key == Keys.LEFT:
-            if self.cursor != OpenMenu.MIN_CURSOR:
-                self.cursor -= 1
-        elif key == Keys.RIGHT:
-            if self.cursor != OpenMenu.MAX_CURSOR:
-                self.cursor += 1
-        elif key == Keys.ENTER:
-            if self.cursor in OpenMenu.FIELDS:
-                self._enter_edit_mode()
-            elif self.cursor == OpenMenu.RETURN:
-                raise MenuExit()
-
-        if key is not None:
-            self.render()
-
-    def loop_edit(self) -> None:
-        if self.cursor not in OpenMenu.FIELDS:
-            return
-
-        time.sleep(0.05)
-
-        value = self.values[self.cursor]
-        low, hi = OpenMenu.CURSOR_MIN_MAX_VALUES[self.cursor]
-
-        key, duration = keys.get()
-        if key == Keys.LEFT:
-            self.values[self.cursor] = clamp(value - int(duration or 1), low, hi)
-        elif key == Keys.RIGHT:
-            self.values[self.cursor] = clamp(value + int(duration or 1), low, hi)
-        elif key == Keys.ENTER:
-            self._leave_edit_mode()
-
-        if key is not None:
-            self.render()
+    def loop_navi_enter(self, duration: float) -> None:
+        if self.pos == self.ID_PREVIEW:
+            ...
+        elif self.pos == self.ID_RETURN:
+            raise MenuExit()
+        else:
+            super().loop_navi_enter(duration)
 
 
 def main() -> None:
