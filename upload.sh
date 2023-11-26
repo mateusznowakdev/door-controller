@@ -27,6 +27,7 @@ fi
 
 if [[ $1 == "--full" ]]
 then
+  circup install -r requirements.txt
   cp -v boot.py code.py main.mpy safemode.py "$CPY_HOME"
 else
   cp -uv boot.py code.py main.mpy safemode.py "$CPY_HOME"
