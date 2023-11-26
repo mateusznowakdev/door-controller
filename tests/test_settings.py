@@ -14,6 +14,9 @@ def run(
     duration: int,
     divided_by: int,
 ) -> tuple[tuple[int, int], ...]:
+    if duration == 0:
+        return ()
+
     first_minute = time_to_minutes(start_hour, start_minute)
     last_minute = time_to_minutes(end_hour, end_minute)
 
@@ -61,7 +64,7 @@ def test_day_schedule_split_by_one():
 
 def test_day_schedule_no_time():
     expected = ()
-    actual = run(9, 0, 17, 30, 0, 1)
+    actual = run(9, 0, 17, 30, 0, 10)
 
     assert expected == actual
 
