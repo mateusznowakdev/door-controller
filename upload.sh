@@ -23,12 +23,16 @@ then
   exit 1
 fi
 
-./mpy-cross main.py
+find app -name '*.py' -exec ./mpy-cross {} \;
+
+mkdir -p "$CPY_HOME/app"
 
 if [[ $1 == "--full" ]]
 then
   circup install -r requirements.txt
-  cp -v boot.py code.py main.mpy safemode.py "$CPY_HOME"
+  cp -v app/*.mpy "$CPY_HOME/app"
+  cp -v boot.py code.py safemode.py "$CPY_HOME"
 else
-  cp -uv boot.py code.py main.mpy safemode.py "$CPY_HOME"
+  cp -uv app/*.mpy "$CPY_HOME/app"
+  cp -uv boot.py code.py safemode.py "$CPY_HOME"
 fi
