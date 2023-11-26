@@ -20,6 +20,9 @@ def run(
     first_minute = time_to_minutes(start_hour, start_minute)
     last_minute = time_to_minutes(end_hour, end_minute)
 
+    if divided_by == 1:
+        return ((start_hour, start_minute),)
+
     total_distance = last_minute - first_minute
     distance = total_distance / (divided_by - 1)
 
