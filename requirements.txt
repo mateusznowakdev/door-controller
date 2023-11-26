@@ -1,3 +1,2 @@
 # These are the dependencies to be installed using circup
 adafruit_character_lcd==3.4.9
-adafruit_datetime==1.2.6

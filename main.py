@@ -5,7 +5,18 @@ from digitalio import DigitalInOut, Direction
 from pwmio import PWMOut
 
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
-from adafruit_datetime import datetime
+
+
+def clamp(value: int, low: int, hi: int) -> int:
+    return max(min(value, hi), low)
+
+
+def format_time(hour: int, minute: int) -> bytes:
+    return f"{hour:02}:{minute:02}".encode()
+
+
+def format_time_full(hour: int, minute: int, second: int) -> bytes:
+    return f"{hour:02}:{minute:02}:{second:02}".encode()
 
 
 class Motor:
@@ -156,10 +167,6 @@ keys = Keys()
 motor = Motor()
 
 
-def clamp(value: int, low: int, hi: int) -> int:
-    return max(min(value, hi), low)
-
-
 class MenuExit(Exception):
     pass
 
@@ -270,8 +277,10 @@ class Menu:
 
 class IdleMenu(Menu):
     def render(self) -> None:
+        h, m, s = time.localtime()[3:6]
+
         display.clear()
-        display.write((0, 0), b"" + datetime.now().time().isoformat())
+        display.write((0, 0), format_time_full(h, m, s))
         display.flush()
 
     def loop_navi(self) -> None:
@@ -387,12 +396,10 @@ class OpenMenu(Menu):
         ca, cb = self.get_cursor()
 
         display.clear()
-        display.write((1, 0), b"  :   -   :  ")
-        display.write((1, 1), b"   s /     \x02 \x03")
-        display.write((1, 0), f"{self.data[0]:02}".encode())
-        display.write((4, 0), f"{self.data[1]:02}".encode())
-        display.write((9, 0), f"{self.data[2]:02}".encode())
-        display.write((12, 0), f"{self.data[3]:02}".encode())
+        display.write((0, 0), b"       -      ")
+        display.write((0, 1), b"    s /     \x02 \x03")
+        display.write((1, 0), format_time(self.data[0], self.data[1]))
+        display.write((9, 0), format_time(self.data[2], self.data[3]))
         display.write((1, 1), f"{self.data[4]:3}".encode())
         display.write((7, 1), f"{self.data[5]:2}".encode())
         display.write(ca, b"\x06")
