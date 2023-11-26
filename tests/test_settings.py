@@ -1,3 +1,6 @@
+import math
+
+SECONDS_IN_MINUTE = 60
 MINUTES_IN_HOUR = 60
 MINUTES_IN_DAY = 1440
 
@@ -20,17 +23,23 @@ def run(
 ) -> tuple[tuple[int, int], ...]:
     if duration == 0:
         return ()
-    if divided_by == 1:
+    if divided_by < 2:
         return ((start_hour, start_minute),)
 
     first_minute = time_to_minutes(start_hour, start_minute)
     last_minute = time_to_minutes(end_hour, end_minute)
 
+    # handle night schedule
     if first_minute > last_minute:
         last_minute += MINUTES_IN_DAY
 
     total_distance = last_minute - first_minute
     distance = total_distance / (divided_by - 1)
+
+    # handle distance between start and end times being too small
+    safe_distance_seconds = math.ceil(duration / divided_by) + SECONDS_IN_MINUTE / 2
+    safe_distance_minutes = math.ceil(safe_distance_seconds / SECONDS_IN_MINUTE)
+    distance = max(distance, safe_distance_minutes)
 
     entries = []
     for idx in range(divided_by):
