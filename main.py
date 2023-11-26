@@ -372,8 +372,8 @@ class OpenMenu(Menu):
         (0, 59),
         (0, 23),
         (0, 59),
-        (0, 500),
-        (0, 20),
+        (0, 900),
+        (1, 20),
     )
 
     ID_PREVIEW = 6
@@ -381,20 +381,20 @@ class OpenMenu(Menu):
 
     def __init__(self) -> None:
         super().__init__()
-        self.data = [1, 12, 23, 34, 456, 56]
+        self.data = [0, 0, 0, 0, 0, 1]
 
     def render(self) -> None:
         ca, cb = self.get_cursor()
 
         display.clear()
         display.write((1, 0), b"  :   -   :  ")
-        display.write((1, 1), b"   s   x   \x02 \x03")
+        display.write((1, 1), b"   s /     \x02 \x03")
         display.write((1, 0), f"{self.data[0]:02}".encode())
         display.write((4, 0), f"{self.data[1]:02}".encode())
         display.write((9, 0), f"{self.data[2]:02}".encode())
         display.write((12, 0), f"{self.data[3]:02}".encode())
         display.write((1, 1), f"{self.data[4]:3}".encode())
-        display.write((6, 1), f"{self.data[5]:2}".encode())
+        display.write((7, 1), f"{self.data[5]:2}".encode())
         display.write(ca, b"\x06")
         display.write(cb, b"\x07")
         display.flush()
