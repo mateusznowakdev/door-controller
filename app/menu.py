@@ -1,7 +1,7 @@
 import time
 
 from app.hardware import Display, Keys, display, keys, motor
-from app.utils import clamp, format_time, format_time_full
+from app.utils import chunk, clamp, format_time, format_time_full, get_time_tuples
 
 
 class MenuExit(Exception):
@@ -19,6 +19,9 @@ class Menu:
 
     def get_cursor(self) -> tuple[tuple[int, int], tuple[int, int]]:
         return self.CURSORS[self.pos]
+
+    def get_min_max_cursors(self) -> tuple[int, int]:
+        return 0, len(self.CURSORS) - 1
 
     def get_min_max_values(self) -> tuple[int, int]:
         return self.MIN_MAX_VALUES[self.pos]
@@ -53,11 +56,13 @@ class Menu:
 
     def loop_navi_left(self, duration: float) -> None:
         _ = duration
-        self.pos = clamp(self.pos - 1, 0, len(self.CURSORS) - 1)
+        lo, hi = self.get_min_max_cursors()
+        self.pos = clamp(self.pos - 1, lo, hi)
 
     def loop_navi_right(self, duration: float) -> None:
         _ = duration
-        self.pos = clamp(self.pos + 1, 0, len(self.CURSORS) - 1)
+        lo, hi = self.get_min_max_cursors()
+        self.pos = clamp(self.pos + 1, lo, hi)
 
     def loop_navi_enter(self, duration: float) -> None:
         _ = duration
@@ -78,11 +83,11 @@ class Menu:
             self.render()
 
     def loop_edit_left(self, duration: float) -> None:
-        lo, hi = self.MIN_MAX_VALUES[self.pos]
+        lo, hi = self.get_min_max_values()
         self.data[self.pos] = clamp(self.data[self.pos] - int(duration or 1), lo, hi)
 
     def loop_edit_right(self, duration: float) -> None:
-        lo, hi = self.MIN_MAX_VALUES[self.pos]
+        lo, hi = self.get_min_max_values()
         self.data[self.pos] = clamp(self.data[self.pos] + int(duration or 1), lo, hi)
 
     def loop_edit_enter(self, duration: float) -> None:
@@ -245,8 +250,47 @@ class OpenMenu(Menu):
 
     def loop_navi_enter(self, duration: float) -> None:
         if self.pos == self.ID_PREVIEW:
-            ...
+            self._enter_submenu(OpenPreviewMenu(self.data))
         elif self.pos == self.ID_RETURN:
             raise MenuExit()
         else:
             super().loop_navi_enter(duration)
+
+
+class OpenPreviewMenu(Menu):
+    def __init__(self, data: tuple[int, ...]) -> None:
+        super().__init__()
+        self.data = chunk(get_time_tuples(data), 4)
+
+    def get_min_max_cursors(self) -> tuple[int, int]:
+        return 0, len(self.data) - 1
+
+    def render(self) -> None:
+        display.clear()
+        display.write((2, 0), b"--:--")
+
+        lo, hi = self.get_min_max_cursors()
+        if self.pos > lo:
+            display.write((0, 1), b"\x7F")
+        if self.pos < hi:
+            display.write((15, 1), b"\x7E")
+
+        try:
+            hh, mm = self.data[self.pos][0]
+            display.write((2, 0), format_time(hh, mm))
+
+            hh, mm = self.data[self.pos][1]
+            display.write((8, 0), format_time(hh, mm))
+
+            hh, mm = self.data[self.pos][2]
+            display.write((2, 1), format_time(hh, mm))
+
+            hh, mm = self.data[self.pos][3]
+            display.write((8, 1), format_time(hh, mm))
+        except IndexError:
+            pass
+
+        display.flush()
+
+    def loop_navi_enter(self, duration: float) -> None:
+        raise MenuExit()

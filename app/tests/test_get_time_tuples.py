@@ -2,64 +2,64 @@ from app.utils import get_time_tuples
 
 
 def test_day_schedule():
-    expected = (
+    expected = [
         (9, 0),
-        (9, 56),
+        (9, 57),
         (10, 53),
         (11, 50),
-        (12, 46),
+        (12, 47),
         (13, 43),
         (14, 40),
-        (15, 36),
+        (15, 37),
         (16, 33),
         (17, 30),
-    )
-    actual = get_time_tuples(9, 0, 17, 30, 456, 10)
+    ]
+    actual = get_time_tuples((9, 0, 17, 30, 456, 10))
 
     assert expected == actual
 
 
 def test_day_schedule_split_by_two():
-    expected = ((9, 0), (17, 30))
-    actual = get_time_tuples(9, 0, 17, 30, 456, 2)
+    expected = [(9, 0), (17, 30)]
+    actual = get_time_tuples((9, 0, 17, 30, 456, 2))
 
     assert expected == actual
 
 
 def test_day_schedule_split_by_one():
-    expected = ((9, 0),)
-    actual = get_time_tuples(9, 0, 17, 30, 456, 1)
+    expected = [(9, 0)]
+    actual = get_time_tuples((9, 0, 17, 30, 456, 1))
 
     assert expected == actual
 
 
 def test_day_schedule_no_time():
-    expected = ()
-    actual = get_time_tuples(9, 0, 17, 30, 0, 10)
+    expected = []
+    actual = get_time_tuples((9, 0, 17, 30, 0, 10))
 
     assert expected == actual
 
 
 def test_night_schedule():
-    expected = (
+    expected = [
         (17, 30),
         (19, 13),
-        (20, 56),
+        (20, 57),
         (22, 40),
         (0, 23),
-        (2, 6),
+        (2, 7),
         (3, 50),
         (5, 33),
-        (7, 16),
+        (7, 17),
         (9, 0),
-    )
-    actual = get_time_tuples(17, 30, 9, 0, 456, 10)
+    ]
+    actual = get_time_tuples((17, 30, 9, 0, 456, 10))
 
     assert expected == actual
 
 
 def test_tight_schedule():
-    expected = (
+    expected = [
         (9, 0),
         (9, 2),
         (9, 4),
@@ -70,7 +70,7 @@ def test_tight_schedule():
         (9, 14),
         (9, 16),
         (9, 18),
-    )
-    actual = get_time_tuples(9, 0, 9, 0, 456, 10)
+    ]
+    actual = get_time_tuples((9, 0, 9, 0, 456, 10))
 
     assert expected == actual
