@@ -1,4 +1,5 @@
 import math
+import time
 
 SECONDS_IN_MINUTE = 60
 MINUTES_IN_HOUR = 60
@@ -45,13 +46,17 @@ def get_time_tuples(settings: tuple[int, ...]) -> list[tuple[int, int], ...]:
     safe_distance_minutes = math.ceil(safe_distance_seconds / SECONDS_IN_MINUTE)
     distance = max(distance, safe_distance_minutes)
 
-    entries = []
+    tuples = []
     for idx in range(divided_by):
         minutes = round(first_minute + idx * distance) % MINUTES_IN_DAY
-        time = minutes_to_time(minutes)
-        entries.append(time)
+        time_tuple = minutes_to_time(minutes)
+        tuples.append(time_tuple)
 
-    return entries
+    return tuples
+
+
+def log(message: str) -> None:
+    print(f"[{time.monotonic():10.2f}] {message}")
 
 
 def minutes_to_time(minutes: int) -> tuple[int, int]:

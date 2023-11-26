@@ -6,6 +6,8 @@ from pwmio import PWMOut
 
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 
+from app.utils import log
+
 
 class Motor:
     def __init__(self) -> None:
@@ -15,15 +17,23 @@ class Motor:
         self._motor_b = DigitalInOut(board.GP19)
         self._motor_b.direction = Direction.OUTPUT
 
-    def start(self, duration: float) -> None:
+    def forward(self, duration: float) -> None:
+        log("Motor has been started (forwards)")
+
         self._motor_f.value = True
         time.sleep(duration)
         self._motor_f.value = False
 
-    def stop(self, duration: float) -> None:
+        log("Motor has been stopped (forwards)")
+
+    def backward(self, duration: float) -> None:
+        log("Motor has been started (backwards)")
+
         self._motor_b.value = True
         time.sleep(duration)
         self._motor_b.value = False
+
+        log("Motor has been stopped (backwards)")
 
 
 class Display:
@@ -150,6 +160,11 @@ class Keys:
                 return self._key_number, 0.0
 
 
-display = Display()
-keys = Keys()
 motor = Motor()
+log("Motor has been initialized")
+
+display = Display()
+log("Display has been initialized")
+
+keys = Keys()
+log("Keypad has been initialized")

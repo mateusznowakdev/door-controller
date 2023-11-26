@@ -1,7 +1,7 @@
 import time
 
 from app.hardware import Display, Keys, display, keys, motor
-from app.utils import chunk, clamp, format_time, format_time_full, get_time_tuples
+from app.utils import chunk, clamp, format_time, format_time_full, get_time_tuples, log
 
 
 class MenuExit(Exception):
@@ -32,6 +32,7 @@ class Menu:
         display.flush()
 
     def enter(self) -> None:
+        log(f"Entering {self.__class__.__name__}")
         self.render()
 
     def loop(self) -> None:
@@ -196,7 +197,7 @@ class MainMenu(Menu):
 
     def loop_edit(self) -> None:
         if self.pos == self.ID_OPEN:
-            motor.start(2.0)
+            motor.forward(2.0)
             self._leave_edit_mode()
         else:
             super().loop_navi()
