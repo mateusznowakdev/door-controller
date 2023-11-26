@@ -1,9 +1,13 @@
-def minutes_to_time(m: int) -> tuple[int, int]:
-    return divmod(m, 60)
+MINUTES_IN_HOUR = 60
+MINUTES_IN_DAY = 1440
 
 
-def time_to_minutes(h: int, m: int) -> int:
-    return h * 60 + m
+def minutes_to_time(minutes: int) -> tuple[int, int]:
+    return divmod(minutes, MINUTES_IN_HOUR)
+
+
+def time_to_minutes(hour: int, minute: int) -> int:
+    return hour * MINUTES_IN_HOUR + minute
 
 
 def run(
@@ -16,21 +20,25 @@ def run(
 ) -> tuple[tuple[int, int], ...]:
     if duration == 0:
         return ()
+    if divided_by == 1:
+        return ((start_hour, start_minute),)
 
     first_minute = time_to_minutes(start_hour, start_minute)
     last_minute = time_to_minutes(end_hour, end_minute)
 
-    if divided_by == 1:
-        return ((start_hour, start_minute),)
+    if first_minute > last_minute:
+        last_minute += MINUTES_IN_DAY
 
     total_distance = last_minute - first_minute
     distance = total_distance / (divided_by - 1)
 
-    entries = tuple(
-        minutes_to_time(int(first_minute + x * distance)) for x in range(divided_by)
-    )
+    entries = []
+    for idx in range(divided_by):
+        minutes = int(first_minute + idx * distance) % MINUTES_IN_DAY
+        time = minutes_to_time(minutes)
+        entries.append(time)
 
-    return entries
+    return tuple(entries)
 
 
 def test_day_schedule():
