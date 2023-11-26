@@ -10,8 +10,10 @@ python = "^3.11"
 [tool.poetry.group.dev.dependencies]
 black = "^23.11.0"
 circuitpython-stubs = "8.2.8"
+circup = "^1.5.2"
 isort = "^5.12.0"
 pylint = "^3.0.2"
+pytest = "^7.4.3"
 
 [tool.isort]
 extra_standard_library = ["board", "digitalio", "keypad", "microcontroller", "pwmio"]
