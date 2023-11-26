@@ -46,14 +46,14 @@ def test_day_schedule():
 
 
 def test_day_schedule_split_by_two():
-    expected = ()
+    expected = ((9, 0), (17, 30))
     actual = run(9, 0, 17, 30, 456, 2)
 
     assert expected == actual
 
 
 def test_day_schedule_split_by_one():
-    expected = ()
+    expected = ((9, 0),)
     actual = run(9, 0, 17, 30, 456, 1)
 
     assert expected == actual
@@ -67,14 +67,36 @@ def test_day_schedule_no_time():
 
 
 def test_night_schedule():
-    expected = ()
+    expected = (
+        (17, 30),
+        (19, 13),
+        (20, 56),
+        (22, 40),
+        (0, 23),
+        (2, 6),
+        (3, 50),
+        (5, 33),
+        (7, 16),
+        (9, 0),
+    )
     actual = run(17, 30, 9, 0, 456, 10)
 
     assert expected == actual
 
 
 def test_tight_schedule():
-    expected = ()
+    expected = (
+        (9, 0),
+        (9, 2),
+        (9, 4),
+        (9, 6),
+        (9, 8),
+        (9, 10),
+        (9, 12),
+        (9, 14),
+        (9, 16),
+        (9, 18),
+    )
     actual = run(9, 0, 9, 0, 456, 10)
 
     assert expected == actual
