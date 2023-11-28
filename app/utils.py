@@ -24,15 +24,15 @@ def format_time_full(hour: int, minute: int, second: int) -> bytes:
 
 
 def get_time_tuples(settings: tuple[int, ...]) -> list[tuple[int, int], ...]:
-    (start_hour, start_minute, end_hour, end_minute, duration, divided_by) = settings
+    (first_hr, first_min, last_hr, last_min, duration, divided_by) = settings
 
     if duration == 0:
         return []
     if divided_by < 2:
-        return [(start_hour, start_minute)]
+        return [(first_hr, first_min)]
 
-    first_minute = time_to_minutes(start_hour, start_minute)
-    last_minute = time_to_minutes(end_hour, end_minute)
+    first_minute = time_to_minutes(first_hr, first_min)
+    last_minute = time_to_minutes(last_hr, last_min)
 
     # handle night schedule
     if first_minute > last_minute:
