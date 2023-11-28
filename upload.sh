@@ -30,9 +30,9 @@ mkdir -p "$CPY_HOME/app"
 if [[ $1 == "--full" ]]
 then
   circup install -r requirements.txt
-  cp -v app/*.mpy "$CPY_HOME/app"
-  cp -v boot.py code.py safemode.py "$CPY_HOME"
-else
-  cp -uv app/*.mpy "$CPY_HOME/app"
-  cp -uv boot.py code.py safemode.py "$CPY_HOME"
 fi
+
+rsync -cv app/*.mpy "$CPY_HOME/app"
+rsync -cv boot.py code.py safemode.py "$CPY_HOME"
+
+sync
