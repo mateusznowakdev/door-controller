@@ -1,7 +1,8 @@
 import time
 
+from app.core import TimeService
 from app.hardware import Display, Keys, display, keys, motor
-from app.utils import chunk, clamp, format_time, format_time_full, get_time_tuples, log
+from app.utils import chunk, clamp, format_time, format_time_full, log
 
 
 class MenuExit(Exception):
@@ -120,7 +121,7 @@ class Menu:
 
 class IdleMenu(Menu):
     def render(self) -> None:
-        h, m, s = time.localtime()[3:6]
+        h, m, s = TimeService.get_current_time_tuple()
 
         display.clear()
         display.write((0, 0), format_time_full(h, m, s))
@@ -259,9 +260,9 @@ class OpenMenu(Menu):
 
 
 class OpenPreviewMenu(Menu):
-    def __init__(self, data: tuple[int, ...]) -> None:
+    def __init__(self, data: list[int]) -> None:
         super().__init__()
-        self.data = chunk(get_time_tuples(data), 4)
+        self.data = chunk(TimeService.get_time_tuples(data), 4)
 
     def get_min_max_cursors(self) -> tuple[int, int]:
         return 0, len(self.data) - 1

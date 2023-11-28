@@ -1,10 +1,12 @@
 import board
 import keypad
 import time
+from busio import I2C
 from digitalio import DigitalInOut, Direction
 from pwmio import PWMOut
 
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
+from adafruit_ds3231 import DS3231
 
 from app.utils import log
 
@@ -159,6 +161,12 @@ class Keys:
                 self._press_read = True
                 return self._key_number, 0.0
 
+
+bus = I2C(scl=board.GP11, sda=board.GP10)
+log("I2C bus has been initialized")
+
+rtc = DS3231(bus)
+log("RTC has been initialized")
 
 motor = Motor()
 log("Motor has been initialized")

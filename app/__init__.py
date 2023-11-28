@@ -1,9 +1,4 @@
-try:
-    from app.menu import IdleMenu
-except ImportError:
-    # not in CircuitPython environment
-    # if errors occur, run ./update.sh --full
-    pass
+from app.menu import IdleMenu
 
 
 def main() -> None:
