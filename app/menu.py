@@ -125,6 +125,7 @@ class IdleMenu(Menu):
 
         display.clear()
         display.write((0, 0), format_time_full(h, m, s))
+        display.write((0, 1), b"" if TimeService.get_time_valid() else b"Set the clock")
         display.flush()
 
     def loop_navi(self) -> None:

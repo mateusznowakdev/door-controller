@@ -43,3 +43,7 @@ class TimeService:
             tuples.append(time_tuple)
 
         return tuples
+
+    @staticmethod
+    def get_time_valid() -> bool:
+        return not rtc.lost_power
