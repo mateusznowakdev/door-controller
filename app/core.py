@@ -1,7 +1,8 @@
 import math
+import time
 
 from app.hardware import rtc
-from app.utils import minutes_to_time, time_to_minutes
+from app.utils import log, minutes_to_time, time_to_minutes
 
 SECONDS_IN_MINUTE = 60
 MINUTES_IN_DAY = 1440
@@ -45,5 +46,14 @@ class TimeService:
         return tuples
 
     @staticmethod
-    def get_time_valid() -> bool:
+    def is_time_valid() -> bool:
         return not rtc.lost_power
+
+    @staticmethod
+    def set_time(data: list[int]) -> None:
+        h1, m1, _ = TimeService.get_current_time_tuple()
+        h2, m2 = data
+
+        if h1 != h2 or m1 != m2 or not TimeService.is_time_valid():
+            rtc.datetime = time.struct_time((2020, 1, 1, h2, m2, 0, 0, 0, -1))
+            log("System time has been updated")

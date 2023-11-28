@@ -125,7 +125,7 @@ class IdleMenu(Menu):
 
         display.clear()
         display.write((0, 0), format_time_full(h, m, s))
-        display.write((0, 1), b"" if TimeService.get_time_valid() else b"Set the clock")
+        display.write((0, 1), b"" if TimeService.is_time_valid() else b"Set the clock")
         display.flush()
 
     def loop_navi(self) -> None:
@@ -169,6 +169,7 @@ class MainMenu(Menu):
 
     ID_OPEN = 0
     ID_SET_OPEN = 2
+    ID_SET_SYS = 4
     ID_RETURN = 6
 
     def get_label(self) -> bytes:
@@ -194,6 +195,8 @@ class MainMenu(Menu):
             super().loop_navi_enter(duration)
         elif self.pos == self.ID_SET_OPEN:
             self._enter_submenu(OpenMenu())
+        elif self.pos == self.ID_SET_SYS:
+            self._enter_submenu(SystemMenu())
         elif self.pos == self.ID_RETURN:
             raise MenuExit()
 
@@ -279,17 +282,17 @@ class OpenPreviewMenu(Menu):
             display.write((15, 1), b"\x7E")
 
         try:
-            hh, mm = self.data[self.pos][0]
-            display.write((2, 0), format_time(hh, mm))
+            h, m = self.data[self.pos][0]
+            display.write((2, 0), format_time(h, m))
 
-            hh, mm = self.data[self.pos][1]
-            display.write((8, 0), format_time(hh, mm))
+            h, m = self.data[self.pos][1]
+            display.write((8, 0), format_time(h, m))
 
-            hh, mm = self.data[self.pos][2]
-            display.write((2, 1), format_time(hh, mm))
+            h, m = self.data[self.pos][2]
+            display.write((2, 1), format_time(h, m))
 
-            hh, mm = self.data[self.pos][3]
-            display.write((8, 1), format_time(hh, mm))
+            h, m = self.data[self.pos][3]
+            display.write((8, 1), format_time(h, m))
         except IndexError:
             pass
 
@@ -297,3 +300,44 @@ class OpenPreviewMenu(Menu):
 
     def loop_navi_enter(self, duration: float) -> None:
         raise MenuExit()
+
+
+class SystemMenu(Menu):
+    CURSORS = (
+        ((0, 0), (3, 0)),
+        ((3, 0), (6, 0)),
+        ((13, 1), (15, 1)),
+    )
+
+    MIN_MAX_VALUES = (
+        (0, 23),
+        (0, 59),
+    )
+
+    ID_RETURN = 2
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        h, m, _ = TimeService.get_current_time_tuple()
+        self.data = [h, m]
+
+    def render(self) -> None:
+        ca, cb = self.get_cursor()
+
+        display.clear()
+        display.write((0, 1), b"              \x03")
+        display.write((1, 0), format_time(self.data[0], self.data[1]))
+        display.write(ca, b"\x06")
+        display.write(cb, b"\x07")
+        display.flush()
+
+    def loop_navi_enter(self, duration: float) -> None:
+        if self.pos == self.ID_RETURN:
+            raise MenuExit()
+        else:
+            super().loop_navi_enter(duration)
+
+    def exit(self) -> None:
+        super().exit()
+        TimeService.set_time(self.data)
