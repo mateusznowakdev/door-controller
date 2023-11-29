@@ -12,6 +12,9 @@ from app.utils import log
 
 
 class Motor:
+    ID_FORWARDS = "f"
+    ID_BACKWARDS = "b"
+
     def __init__(self) -> None:
         self._motor_f = DigitalInOut(board.GP18)
         self._motor_f.direction = Direction.OUTPUT

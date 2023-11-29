@@ -1,11 +1,28 @@
 import math
 import time
 
-from app.hardware import rtc
+from app.hardware import Motor, rtc
 from app.utils import log, minutes_to_time, time_to_minutes
 
 SECONDS_IN_MINUTE = 60
 MINUTES_IN_DAY = 1440
+
+
+class SettingService:
+    @staticmethod
+    def get(motor_name: str) -> list[int]:
+        if motor_name == Motor.ID_FORWARDS:
+            return [0, 0, 0, 0, 0, 0]
+        else:
+            return [99, 99, 99, 99, 999, 99]
+
+    @staticmethod
+    def set(motor_name: str, data: list[int]) -> None:
+        _ = motor_name
+        _ = data
+
+        # TODO: implementation
+        log("Motor settings have been changed")
 
 
 class TimeService:

@@ -1,7 +1,7 @@
 import time
 
-from app.core import TimeService
-from app.hardware import Display, Keys, display, keys, motor
+from app.core import SettingService, TimeService
+from app.hardware import Display, Keys, Motor, display, keys, motor
 from app.utils import chunk, clamp, format_time, format_time_full, log
 
 
@@ -168,7 +168,9 @@ class MainMenu(Menu):
     )
 
     ID_OPEN = 0
+    ID_CLOSE = 1
     ID_SET_OPEN = 2
+    ID_SET_CLOSE = 3
     ID_SET_SYS = 4
     ID_RETURN = 6
 
@@ -191,10 +193,12 @@ class MainMenu(Menu):
         display.flush()
 
     def loop_navi_enter(self, duration: float) -> None:
-        if self.pos == self.ID_OPEN:
+        if self.pos in (self.ID_OPEN, self.ID_CLOSE):
             super().loop_navi_enter(duration)
         elif self.pos == self.ID_SET_OPEN:
-            self._enter_submenu(OpenMenu())
+            self._enter_submenu(MotorMenu(Motor.ID_FORWARDS))
+        elif self.pos == self.ID_SET_CLOSE:
+            self._enter_submenu(MotorMenu(Motor.ID_BACKWARDS))
         elif self.pos == self.ID_SET_SYS:
             self._enter_submenu(SystemMenu())
         elif self.pos == self.ID_RETURN:
@@ -204,6 +208,9 @@ class MainMenu(Menu):
         if self.pos == self.ID_OPEN:
             motor.forward(2.0)
             self._leave_edit_mode()
+        elif self.pos == self.ID_CLOSE:
+            motor.backward(2.0)
+            self._leave_edit_mode()
         else:
             super().loop_navi()
 
@@ -212,7 +219,7 @@ class MainMenu(Menu):
         display.set_backlight(Display.BACKLIGHT_OFF)
 
 
-class OpenMenu(Menu):
+class MotorMenu(Menu):
     CURSORS = (
         ((0, 0), (3, 0)),
         ((3, 0), (6, 0)),
@@ -236,9 +243,11 @@ class OpenMenu(Menu):
     ID_PREVIEW = 6
     ID_RETURN = 7
 
-    def __init__(self) -> None:
+    def __init__(self, name: str) -> None:
         super().__init__()
-        self.data = [0, 0, 0, 0, 0, 1]
+
+        self.data = SettingService.get(name)
+        self.name = name
 
     def render(self) -> None:
         ca, cb = self.get_cursor()
@@ -256,14 +265,18 @@ class OpenMenu(Menu):
 
     def loop_navi_enter(self, duration: float) -> None:
         if self.pos == self.ID_PREVIEW:
-            self._enter_submenu(OpenPreviewMenu(self.data))
+            self._enter_submenu(MotorPreviewMenu(self.data))
         elif self.pos == self.ID_RETURN:
             raise MenuExit()
         else:
             super().loop_navi_enter(duration)
 
+    def exit(self) -> None:
+        super().exit()
+        SettingService.set(self.name, self.data)
 
-class OpenPreviewMenu(Menu):
+
+class MotorPreviewMenu(Menu):
     def __init__(self, data: list[int]) -> None:
         super().__init__()
         self.data = chunk(TimeService.get_time_tuples(data), 4)
