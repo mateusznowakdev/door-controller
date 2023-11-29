@@ -1,6 +1,7 @@
 import math
 import time
 
+BASE_CHECKSUM = 42
 MINUTES_IN_HOUR = 60
 
 
@@ -22,7 +23,7 @@ def format_time_full(hour: int, minute: int, second: int) -> bytes:
 
 
 def get_checksum(data: list[int]) -> int:
-    result = 0
+    result = BASE_CHECKSUM
 
     for value in data:
         result ^= value
