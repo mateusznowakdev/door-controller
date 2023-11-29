@@ -243,7 +243,7 @@ class MotorMenu(Menu):
     ID_PREVIEW = 6
     ID_RETURN = 7
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: int) -> None:
         super().__init__()
 
         self.data = SettingService.get(name)

@@ -5,6 +5,7 @@ from busio import I2C
 from digitalio import DigitalInOut, Direction
 from pwmio import PWMOut
 
+from adafruit_24lc32 import EEPROM_I2C
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 from adafruit_ds3231 import DS3231
 
@@ -12,8 +13,8 @@ from app.utils import log
 
 
 class Motor:
-    ID_FORWARDS = "f"
-    ID_BACKWARDS = "b"
+    ID_FORWARDS = 0
+    ID_BACKWARDS = 64
 
     def __init__(self) -> None:
         self._motor_f = DigitalInOut(board.GP18)
@@ -23,22 +24,22 @@ class Motor:
         self._motor_b.direction = Direction.OUTPUT
 
     def forward(self, duration: float) -> None:
-        log("Motor has been started (forwards)")
+        log(f"Motor #{Motor.ID_FORWARDS} has been started")
 
         self._motor_f.value = True
         time.sleep(duration)
         self._motor_f.value = False
 
-        log("Motor has been stopped (forwards)")
+        log(f"Motor #{Motor.ID_FORWARDS} has been stopped")
 
     def backward(self, duration: float) -> None:
-        log("Motor has been started (backwards)")
+        log(f"Motor #{Motor.ID_BACKWARDS} has been started")
 
         self._motor_b.value = True
         time.sleep(duration)
         self._motor_b.value = False
 
-        log("Motor has been stopped (backwards)")
+        log(f"Motor #{Motor.ID_BACKWARDS} has been stopped")
 
 
 class Display:
@@ -170,6 +171,10 @@ log("I2C bus has been initialized")
 
 rtc = DS3231(bus)
 log("RTC has been initialized")
+
+eeprom = EEPROM_I2C(bus, 0x57)
+eeprom._max_size = 32768  # pylint:disable=protected-access
+log("EEPROM has been initialized")
 
 motor = Motor()
 log("Motor has been initialized")
