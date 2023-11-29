@@ -16,6 +16,8 @@ class Motor:
     ID_FORWARDS = 0
     ID_BACKWARDS = 64
 
+    ID_LIST = [ID_FORWARDS, ID_BACKWARDS]
+
     def __init__(self) -> None:
         self._motor_f = DigitalInOut(board.GP18)
         self._motor_f.direction = Direction.OUTPUT

@@ -21,6 +21,15 @@ def format_time_full(hour: int, minute: int, second: int) -> bytes:
     return f"{hour:02}:{minute:02}:{second:02}".encode()
 
 
+def get_checksum(data: list[int]) -> int:
+    result = 0
+
+    for value in data:
+        result ^= value
+
+    return result
+
+
 def log(message: str) -> None:
     print(f"[{time.monotonic():10.2f}] {message}")
 
@@ -31,3 +40,7 @@ def minutes_to_time(minutes: int) -> tuple[int, int]:
 
 def time_to_minutes(hour: int, minute: int) -> int:
     return hour * MINUTES_IN_HOUR + minute
+
+
+def verify_checksum(data: list[int]) -> bool:
+    return get_checksum(data[:-1]) == data[-1]
