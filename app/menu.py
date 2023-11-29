@@ -154,7 +154,6 @@ class MainMenu(Menu):
         ((6, 0), (8, 0)),
         ((8, 0), (10, 0)),
         ((10, 0), (12, 0)),
-        ((12, 0), (14, 0)),
     )
 
     LABELS = (
@@ -163,7 +162,6 @@ class MainMenu(Menu):
         b"Set up opening",
         b"Set up closing",
         b"Set system time",
-        b"Event log",
         b"Return",
     )
 
@@ -172,7 +170,7 @@ class MainMenu(Menu):
     ID_SET_OPEN = 2
     ID_SET_CLOSE = 3
     ID_SET_SYS = 4
-    ID_RETURN = 6
+    ID_RETURN = 5
 
     def get_label(self) -> bytes:
         return self.LABELS[self.pos]
@@ -186,16 +184,14 @@ class MainMenu(Menu):
         label = self.get_label()
 
         display.clear()
-        display.write((1, 0), b"\x00 \x01 \x7E \x7F \x04 \x02 \x05")
+        display.write((1, 0), b"\x00 \x01 \x7E \x7F \x04 \x05")
         display.write((1, 1), label)
         display.write(ca, b"\x06")
         display.write(cb, b"\x07")
         display.flush()
 
     def loop_navi_enter(self, duration: float) -> None:
-        if self.pos in (self.ID_OPEN, self.ID_CLOSE):
-            super().loop_navi_enter(duration)
-        elif self.pos == self.ID_SET_OPEN:
+        if self.pos == self.ID_SET_OPEN:
             self._enter_submenu(MotorMenu(Motor.ID_FORWARDS))
         elif self.pos == self.ID_SET_CLOSE:
             self._enter_submenu(MotorMenu(Motor.ID_BACKWARDS))
@@ -203,6 +199,8 @@ class MainMenu(Menu):
             self._enter_submenu(SystemMenu())
         elif self.pos == self.ID_RETURN:
             raise MenuExit()
+        else:
+            super().loop_navi_enter(duration)
 
     def loop_edit(self) -> None:
         if self.pos == self.ID_OPEN:
