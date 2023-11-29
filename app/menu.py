@@ -1,4 +1,4 @@
-import time
+import asyncio
 
 from app.core import SettingService, TimeService
 from app.hardware import Display, Keys, Motor, display, keys, motor
@@ -36,42 +36,42 @@ class Menu:
         log(f"Entering {self.__class__.__name__}")
         self.render()
 
-    def loop(self) -> None:
+    async def loop(self) -> None:
         if self.edit:
-            self.loop_edit()
+            await self.loop_edit()
         else:
-            self.loop_navi()
+            await self.loop_navi()
 
-    def loop_navi(self) -> None:
-        time.sleep(0.05)
+    async def loop_navi(self) -> None:
+        await asyncio.sleep(0.05)
 
         key, duration = keys.get()
         if key == Keys.LEFT:
-            self.loop_navi_left(duration)
+            await self.loop_navi_left(duration)
         elif key == Keys.RIGHT:
-            self.loop_navi_right(duration)
+            await self.loop_navi_right(duration)
         elif key == Keys.ENTER:
-            self.loop_navi_enter(duration)
+            await self.loop_navi_enter(duration)
 
         if key is not None:
             self.render()
 
-    def loop_navi_left(self, duration: float) -> None:
+    async def loop_navi_left(self, duration: float) -> None:
         _ = duration
         lo, hi = self.get_min_max_cursors()
         self.pos = clamp(self.pos - 1, lo, hi)
 
-    def loop_navi_right(self, duration: float) -> None:
+    async def loop_navi_right(self, duration: float) -> None:
         _ = duration
         lo, hi = self.get_min_max_cursors()
         self.pos = clamp(self.pos + 1, lo, hi)
 
-    def loop_navi_enter(self, duration: float) -> None:
+    async def loop_navi_enter(self, duration: float) -> None:
         _ = duration
         self._enter_edit_mode()
 
-    def loop_edit(self) -> None:
-        time.sleep(0.05)
+    async def loop_edit(self) -> None:
+        await asyncio.sleep(0.05)
 
         key, duration = keys.get()
         if key == Keys.LEFT:
@@ -99,11 +99,11 @@ class Menu:
     def exit(self) -> None:
         pass
 
-    def _enter_submenu(self, instance: "Menu") -> None:
+    async def _enter_submenu(self, instance: "Menu") -> None:
         try:
             instance.enter()
             while True:
-                instance.loop()
+                await instance.loop()
         except MenuExit:
             instance.exit()
             self.enter()
@@ -128,21 +128,21 @@ class IdleMenu(Menu):
         display.write((0, 1), b"" if TimeService.is_time_valid() else b"Set the clock")
         display.flush()
 
-    def loop_navi(self) -> None:
-        super().loop_navi()
+    async def loop_navi(self) -> None:
+        await super().loop_navi()
 
         # time should be refreshed even if there is no input
         self.render()
-        time.sleep(0.9)
+        await asyncio.sleep(0.9)
 
-    def loop_navi_left(self, duration: float) -> None:
+    async def loop_navi_left(self, duration: float) -> None:
         if duration > 3.0:
-            self._enter_submenu(MainMenu())
+            await self._enter_submenu(MainMenu())
 
-    def loop_navi_right(self, duration: float) -> None:
+    async def loop_navi_right(self, duration: float) -> None:
         return
 
-    def loop_navi_enter(self, duration: float) -> None:
+    async def loop_navi_enter(self, duration: float) -> None:
         return
 
 
@@ -190,19 +190,19 @@ class MainMenu(Menu):
         display.write(cb, b"\x07")
         display.flush()
 
-    def loop_navi_enter(self, duration: float) -> None:
+    async def loop_navi_enter(self, duration: float) -> None:
         if self.pos == self.ID_SET_OPEN:
-            self._enter_submenu(MotorMenu(Motor.ID_FORWARDS))
+            await self._enter_submenu(MotorMenu(Motor.ID_FORWARDS))
         elif self.pos == self.ID_SET_CLOSE:
-            self._enter_submenu(MotorMenu(Motor.ID_BACKWARDS))
+            await self._enter_submenu(MotorMenu(Motor.ID_BACKWARDS))
         elif self.pos == self.ID_SET_SYS:
-            self._enter_submenu(SystemMenu())
+            await self._enter_submenu(SystemMenu())
         elif self.pos == self.ID_RETURN:
             raise MenuExit()
         else:
-            super().loop_navi_enter(duration)
+            await super().loop_navi_enter(duration)
 
-    def loop_edit(self) -> None:
+    async def loop_edit(self) -> None:
         if self.pos == self.ID_OPEN:
             motor.forward(2.0)
             self._leave_edit_mode()
@@ -210,7 +210,7 @@ class MainMenu(Menu):
             motor.backward(2.0)
             self._leave_edit_mode()
         else:
-            super().loop_navi()
+            await super().loop_navi()
 
     def exit(self) -> None:
         super().exit()
@@ -262,13 +262,13 @@ class MotorMenu(Menu):
         display.write(cb, b"\x07")
         display.flush()
 
-    def loop_navi_enter(self, duration: float) -> None:
+    async def loop_navi_enter(self, duration: float) -> None:
         if self.pos == self.ID_PREVIEW:
-            self._enter_submenu(MotorPreviewMenu(self.data))
+            await self._enter_submenu(MotorPreviewMenu(self.data))
         elif self.pos == self.ID_RETURN:
             raise MenuExit()
         else:
-            super().loop_navi_enter(duration)
+            await super().loop_navi_enter(duration)
 
     def exit(self) -> None:
         super().exit()
@@ -312,7 +312,7 @@ class MotorPreviewMenu(Menu):
 
         display.flush()
 
-    def loop_navi_enter(self, duration: float) -> None:
+    async def loop_navi_enter(self, duration: float) -> None:
         raise MenuExit()
 
 
@@ -347,14 +347,22 @@ class SystemMenu(Menu):
         display.write(cb, b"\x07")
         display.flush()
 
-    def loop_navi_enter(self, duration: float) -> None:
+    async def loop_navi_enter(self, duration: float) -> None:
         if self.pos == self.ID_RETURN:
             raise MenuExit()
         else:
-            super().loop_navi_enter(duration)
+            await super().loop_navi_enter(duration)
 
     def exit(self) -> None:
         super().exit()
 
         if tuple(self.initial) != tuple(self.data) or not TimeService.is_time_valid():
             TimeService.set_time(self.data)
+
+
+async def menu_loop() -> None:
+    menu = IdleMenu()
+    menu.enter()
+
+    while True:
+        await menu.loop()

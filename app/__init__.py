@@ -1,9 +1,7 @@
-from app.menu import IdleMenu
+import asyncio
 
 
-def main() -> None:
-    menu = IdleMenu()
-    menu.enter()
+async def main() -> None:
+    from app.menu import menu_loop  # pylint:disable=import-outside-toplevel
 
-    while True:
-        menu.loop()
+    await asyncio.gather(menu_loop())

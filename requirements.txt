@@ -4,3 +4,4 @@
 adafruit_24lc32==1.0.11
 adafruit_character_lcd==3.4.9
 adafruit_ds3231==2.4.19
+asyncio==1.2.1

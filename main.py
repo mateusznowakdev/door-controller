@@ -1,3 +1,6 @@
+import asyncio
+
 from app import main
 
-main()
+if __name__ == "__main__":
+    asyncio.run(main())
