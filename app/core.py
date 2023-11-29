@@ -86,9 +86,5 @@ class TimeService:
 
     @staticmethod
     def set_time(data: list[int]) -> None:
-        h1, m1, _ = TimeService.get_current_time_tuple()
-        h2, m2 = data
-
-        if h1 != h2 or m1 != m2 or not TimeService.is_time_valid():
-            rtc.datetime = time.struct_time((2020, 1, 1, h2, m2, 0, 0, 0, -1))
-            log("System time has been updated")
+        rtc.datetime = time.struct_time((2020, 1, 1, data[0], data[1], 0, 0, 0, -1))
+        log("System time has been updated")

@@ -244,7 +244,8 @@ class MotorMenu(Menu):
     def __init__(self, name: int) -> None:
         super().__init__()
 
-        self.data = SettingService.get(name)
+        self.initial = SettingService.get(name)
+        self.data = list(self.initial)
         self.name = name
 
     def render(self) -> None:
@@ -271,7 +272,9 @@ class MotorMenu(Menu):
 
     def exit(self) -> None:
         super().exit()
-        SettingService.set(self.name, self.data)
+
+        if tuple(self.initial) != tuple(self.data):
+            SettingService.set(self.name, self.data)
 
 
 class MotorPreviewMenu(Menu):
@@ -331,7 +334,8 @@ class SystemMenu(Menu):
         super().__init__()
 
         h, m, _ = TimeService.get_current_time_tuple()
-        self.data = [h, m]
+        self.initial = [h, m]
+        self.data = list(self.initial)
 
     def render(self) -> None:
         ca, cb = self.get_cursor()
@@ -351,4 +355,6 @@ class SystemMenu(Menu):
 
     def exit(self) -> None:
         super().exit()
-        TimeService.set_time(self.data)
+
+        if tuple(self.initial) != tuple(self.data) or not TimeService.is_time_valid():
+            TimeService.set_time(self.data)
