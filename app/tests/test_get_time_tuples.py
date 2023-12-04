@@ -1,6 +1,4 @@
-from app.core import TimeService
-
-get_time_tuples = TimeService.get_time_tuples
+from app.utils import get_time_tuples
 
 
 def test_day_schedule():

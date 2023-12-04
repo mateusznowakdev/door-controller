@@ -12,6 +12,22 @@ from adafruit_ds3231 import DS3231
 from app.utils import log
 
 
+class RTC:
+    def __init__(self, bus: I2C) -> None:
+        self._rtc = DS3231(bus)
+
+    def get(self) -> tuple[int, int, int]:
+        h, m, s = self._rtc.datetime[3:6]
+        return h, m, s
+
+    def set(self, h: int, m: int, s: int) -> None:
+        self._rtc.datetime = time.struct_time((2020, 1, 1, h, m, s, 0, 0, -1))
+        log("System time has been updated")
+
+    def is_valid(self) -> bool:
+        return not self._rtc.lost_power
+
+
 class Motor:
     ID_FORWARDS = 0
     ID_BACKWARDS = 64
@@ -168,13 +184,13 @@ class Keys:
                 return self._key_number, 0.0
 
 
-bus = I2C(scl=board.GP11, sda=board.GP10)
+i2c = I2C(scl=board.GP11, sda=board.GP10)
 log("I2C bus has been initialized")
 
-rtc = DS3231(bus)
+rtc = RTC(i2c)
 log("RTC has been initialized")
 
-eeprom = EEPROM_I2C(bus, 0x57)
+eeprom = EEPROM_I2C(i2c, 0x57)
 eeprom._max_size = 32768  # pylint:disable=protected-access
 log("EEPROM has been initialized")
 

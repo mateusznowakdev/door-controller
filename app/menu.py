@@ -1,8 +1,8 @@
 import asyncio
 
-from app.core import SettingService, TimeService
-from app.hardware import Display, Keys, Motor, display, keys, motor
-from app.utils import chunk, clamp, format_time, format_time_full, log
+from app.core import SettingService
+from app.hardware import Display, Keys, Motor, display, keys, motor, rtc
+from app.utils import chunk, clamp, format_time, format_time_full, get_time_tuples, log
 
 
 class MenuExit(Exception):
@@ -121,11 +121,11 @@ class Menu:
 
 class IdleMenu(Menu):
     def render(self) -> None:
-        h, m, s = TimeService.get_current_time_tuple()
+        h, m, s = rtc.get()
 
         display.clear()
         display.write((0, 0), format_time_full(h, m, s))
-        display.write((0, 1), b"" if TimeService.is_time_valid() else b"Set the clock")
+        display.write((0, 1), b"" if rtc.is_valid() else b"Set the clock")
         display.flush()
 
     async def loop_navi(self) -> None:
@@ -280,7 +280,7 @@ class MotorMenu(Menu):
 class MotorPreviewMenu(Menu):
     def __init__(self, data: list[int]) -> None:
         super().__init__()
-        self.data = chunk(TimeService.get_time_tuples(data), 4)
+        self.data = chunk(get_time_tuples(data), 4)
 
     def get_min_max_cursors(self) -> tuple[int, int]:
         return 0, len(self.data) - 1
@@ -333,7 +333,7 @@ class SystemMenu(Menu):
     def __init__(self) -> None:
         super().__init__()
 
-        h, m, _ = TimeService.get_current_time_tuple()
+        h, m, _ = rtc.get()
         self.initial = [h, m]
         self.data = list(self.initial)
 
@@ -356,8 +356,9 @@ class SystemMenu(Menu):
     def exit(self) -> None:
         super().exit()
 
-        if tuple(self.initial) != tuple(self.data) or not TimeService.is_time_valid():
-            TimeService.set_time(self.data)
+        if tuple(self.initial) != tuple(self.data) or not rtc.is_valid():
+            h, m = self.data
+            rtc.set(h, m, 0)
 
 
 async def menu_loop() -> None:
