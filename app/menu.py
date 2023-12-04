@@ -2,7 +2,7 @@ import asyncio
 
 from app.core import SettingService
 from app.hardware import Display, Keys, Motor, display, keys, motor, rtc
-from app.utils import chunk, clamp, format_time, format_time_full, get_time_tuples, log
+from app.utils import chunk, clamp, format_time, get_time_offset_strings, log
 
 
 class MenuExit(Exception):
@@ -124,7 +124,7 @@ class IdleMenu(Menu):
         h, m, s = rtc.get()
 
         display.clear()
-        display.write((0, 0), format_time_full(h, m, s))
+        display.write((0, 0), format_time(h, m, s))
         display.write((0, 1), b"" if rtc.is_valid() else b"Set the clock")
         display.flush()
 
@@ -280,14 +280,14 @@ class MotorMenu(Menu):
 class MotorPreviewMenu(Menu):
     def __init__(self, data: list[int]) -> None:
         super().__init__()
-        self.data = chunk(get_time_tuples(data), 4)
+        self.data = chunk(get_time_offset_strings(data), 2)
 
     def get_min_max_cursors(self) -> tuple[int, int]:
         return 0, len(self.data) - 1
 
     def render(self) -> None:
         display.clear()
-        display.write((2, 0), b"--:--")
+        display.write((4, 0), b"--:--:--")
 
         lo, hi = self.get_min_max_cursors()
         if self.pos > lo:
@@ -296,17 +296,8 @@ class MotorPreviewMenu(Menu):
             display.write((15, 1), b"\x7E")
 
         try:
-            h, m = self.data[self.pos][0]
-            display.write((2, 0), format_time(h, m))
-
-            h, m = self.data[self.pos][1]
-            display.write((8, 0), format_time(h, m))
-
-            h, m = self.data[self.pos][2]
-            display.write((2, 1), format_time(h, m))
-
-            h, m = self.data[self.pos][3]
-            display.write((8, 1), format_time(h, m))
+            display.write((4, 0), self.data[self.pos][0])
+            display.write((4, 1), self.data[self.pos][1])
         except IndexError:
             pass
 
