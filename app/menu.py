@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 from app.core import SettingService
 from app.hardware import Display, Keys, Motor, display, keys, motor, rtc
@@ -121,11 +122,11 @@ class Menu:
 
 class IdleMenu(Menu):
     def render(self) -> None:
-        h, m, s = rtc.get()
+        now = time.localtime()
 
         display.clear()
-        display.write((0, 0), format_time(h, m, s))
-        display.write((0, 1), b"" if rtc.is_valid() else b"Set the clock")
+        display.write((0, 0), format_time(now.tm_hour, now.tm_min, now.tm_sec))
+        display.write((0, 1), b"Set the clock" if rtc.lost_power else b"")
         display.flush()
 
     async def loop_navi(self) -> None:
@@ -324,8 +325,8 @@ class SystemMenu(Menu):
     def __init__(self) -> None:
         super().__init__()
 
-        h, m, _ = rtc.get()
-        self.initial = [h, m]
+        now = time.localtime()
+        self.initial = [now.tm_hour, now.tm_min]
         self.data = list(self.initial)
 
     def render(self) -> None:
@@ -347,9 +348,9 @@ class SystemMenu(Menu):
     def exit(self) -> None:
         super().exit()
 
-        if tuple(self.initial) != tuple(self.data) or not rtc.is_valid():
+        if rtc.lost_power or tuple(self.initial) != tuple(self.data):
             h, m = self.data
-            rtc.set(h, m, 0)
+            rtc.datetime = time.struct_time((2000, 1, 1, h, m, 0, 0, 0, -1))
 
 
 async def menu_loop() -> None:
