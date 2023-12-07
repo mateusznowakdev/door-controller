@@ -29,10 +29,10 @@ class RTC:
 
 
 class Motor:
-    ID_FORWARDS = 0
-    ID_BACKWARDS = 64
+    ID_OPEN = 0
+    ID_CLOSE = 64
 
-    ID_LIST = [ID_FORWARDS, ID_BACKWARDS]
+    ID_LIST = [ID_OPEN, ID_CLOSE]
 
     def __init__(self) -> None:
         self._motor_f = DigitalInOut(board.GP18)
@@ -41,23 +41,23 @@ class Motor:
         self._motor_b = DigitalInOut(board.GP19)
         self._motor_b.direction = Direction.OUTPUT
 
-    def forward(self, duration: float) -> None:
-        log(f"Motor #{Motor.ID_FORWARDS} has been started")
+    def open(self, duration: float) -> None:
+        log(f"Motor #{Motor.ID_OPEN} has been started")
 
         self._motor_f.value = True
         time.sleep(duration)
         self._motor_f.value = False
 
-        log(f"Motor #{Motor.ID_FORWARDS} has been stopped")
+        log(f"Motor #{Motor.ID_OPEN} has been stopped")
 
-    def backward(self, duration: float) -> None:
-        log(f"Motor #{Motor.ID_BACKWARDS} has been started")
+    def close(self, duration: float) -> None:
+        log(f"Motor #{Motor.ID_CLOSE} has been started")
 
         self._motor_b.value = True
         time.sleep(duration)
         self._motor_b.value = False
 
-        log(f"Motor #{Motor.ID_BACKWARDS} has been stopped")
+        log(f"Motor #{Motor.ID_CLOSE} has been stopped")
 
 
 class Display:

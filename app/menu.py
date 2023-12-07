@@ -192,9 +192,9 @@ class MainMenu(Menu):
 
     async def loop_navi_enter(self, duration: float) -> None:
         if self.pos == self.ID_SET_OPEN:
-            await self._enter_submenu(MotorMenu(Motor.ID_FORWARDS))
+            await self._enter_submenu(MotorMenu(Motor.ID_OPEN))
         elif self.pos == self.ID_SET_CLOSE:
-            await self._enter_submenu(MotorMenu(Motor.ID_BACKWARDS))
+            await self._enter_submenu(MotorMenu(Motor.ID_CLOSE))
         elif self.pos == self.ID_SET_SYS:
             await self._enter_submenu(SystemMenu())
         elif self.pos == self.ID_RETURN:
@@ -204,10 +204,10 @@ class MainMenu(Menu):
 
     async def loop_edit(self) -> None:
         if self.pos == self.ID_OPEN:
-            motor.forward(2.0)
+            motor.open(2.0)
             self._leave_edit_mode()
         elif self.pos == self.ID_CLOSE:
-            motor.backward(2.0)
+            motor.close(2.0)
             self._leave_edit_mode()
         else:
             await super().loop_navi()
