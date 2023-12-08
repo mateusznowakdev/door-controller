@@ -1,3 +1,4 @@
+import asyncio
 import time
 
 from app.classes import Settings, Task
@@ -34,17 +35,31 @@ class SettingService:
             SettingService.set(motor_id, SettingService.DEFAULT_SETTINGS)
 
 
-class SchedulerService:
+class Scheduler:
+    def __init__(self):
+        self.tasks = self.get_tasks()
+
+    async def loop(self) -> None:
+        now = time.time()
+
+        for idx, task in enumerate(self.tasks):
+            if now < task.timestamp:
+                continue
+
+            task.function()
+            self.tasks[idx] = Task(task.timestamp + DAY, task.function)
+
+            # skip processing other operations for now
+            return
+
+        await asyncio.sleep(5.0)
+
     @staticmethod
-    async def get_tasks() -> list[Task]:
-        opening_tasks = SchedulerService.get_tasks_by_motor(Motor.ID_OPEN)
-        closing_tasks = SchedulerService.get_tasks_by_motor(Motor.ID_CLOSE)
-        tasks = sorted(opening_tasks + closing_tasks, key=lambda obj: obj.timestamp)
+    def get_tasks() -> list[Task]:
+        opening_tasks = Scheduler.get_tasks_by_motor(Motor.ID_OPEN)
+        closing_tasks = Scheduler.get_tasks_by_motor(Motor.ID_CLOSE)
 
-        for event in tasks:
-            print(event.timestamp, time.localtime(event.timestamp))
-
-        return tasks
+        return opening_tasks + closing_tasks
 
     @staticmethod
     def get_tasks_by_motor(motor_id: int) -> list[Task]:
@@ -61,12 +76,19 @@ class SchedulerService:
         offsets = get_time_offsets(settings)
 
         for offset in offsets:
-            # add extra 10s delay before any task can be run
+            # add extra 5s delay before any task can be run
             ts = midnight_ts + offset
-            while ts < now_ts + 10 * SECOND:
+            while ts < now_ts + 5 * SECOND:
                 ts += DAY
 
             task = Task(ts, lambda: motor.run(motor_id, settings.duration_single))
             tasks.append(task)
 
         return tasks
+
+
+async def scheduler_loop() -> None:
+    scheduler = Scheduler()
+
+    while True:
+        await scheduler.loop()
