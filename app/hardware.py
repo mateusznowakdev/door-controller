@@ -134,6 +134,7 @@ class Keys:
     RIGHT = 1
     ENTER = 2
 
+    HOLD_KEYS = [LEFT, RIGHT]
     HOLD_THRESHOLD = 1.0
 
     def __init__(self):
@@ -165,7 +166,7 @@ class Keys:
             return None, 0.0
 
         diff = time.monotonic() - self._key_timestamp
-        if diff > Keys.HOLD_THRESHOLD:
+        if self._key_number in Keys.HOLD_KEYS and diff > Keys.HOLD_THRESHOLD:
             return self._key_number, diff
         else:
             if self._press_read:
