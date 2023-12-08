@@ -3,7 +3,7 @@ import keypad
 import rtc as _rtc
 import time
 from busio import I2C
-from digitalio import DigitalInOut, Direction
+from digitalio import DigitalInOut, Direction, Pull
 from microcontroller import watchdog
 from pwmio import PWMOut
 from watchdog import WatchDogMode
@@ -21,6 +21,7 @@ class WatchDog:
     def __init__(self) -> None:
         self.wdt_pin = DigitalInOut(board.GP28)
         self.wdt_pin.direction = Direction.INPUT
+        self.wdt_pin.pull = Pull.DOWN
         self.enabled = False
 
     def feed(self) -> None:
