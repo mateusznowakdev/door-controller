@@ -37,6 +37,17 @@ class SettingService:
 class SchedulerService:
     @staticmethod
     async def get_tasks() -> list[Task]:
+        opening_tasks = SchedulerService.get_tasks_by_motor(Motor.ID_OPEN)
+        closing_tasks = SchedulerService.get_tasks_by_motor(Motor.ID_CLOSE)
+        tasks = sorted(opening_tasks + closing_tasks, key=lambda obj: obj.timestamp)
+
+        for event in tasks:
+            print(event.timestamp, time.localtime(event.timestamp))
+
+        return tasks
+
+    @staticmethod
+    def get_tasks_by_motor(motor_id: int) -> list[Task]:
         tasks = []
 
         now = time.localtime()
@@ -46,21 +57,19 @@ class SchedulerService:
             (now.tm_year, now.tm_mon, now.tm_mday, 0, 0, 0, 0, 0, -1)
         )
 
-        settings = SettingService.get(Motor.ID_OPEN)
+        settings = SettingService.get(motor_id)
         offsets = get_time_offsets(settings)
 
         for offset in offsets:
+            # add extra 10s delay before any task can be run
             ts = midnight_ts + offset
             while ts < now_ts + 10 * SECOND:
                 ts += DAY
 
-            task = Task(ts, lambda: motor.open(settings.duration / settings.divided_by))
-
-            # todo: repeat for closing tasks
-
+            task = Task(
+                ts,
+                lambda: motor.run(motor_id, settings.duration / settings.divided_by),
+            )
             tasks.append(task)
-
-        for event in tasks:
-            print(event.timestamp, time.localtime(event.timestamp))
 
         return tasks

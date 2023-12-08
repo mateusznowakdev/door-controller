@@ -26,6 +26,14 @@ class Motor:
         self._motor_b = DigitalInOut(board.GP19)
         self._motor_b.direction = Direction.OUTPUT
 
+    def run(self, motor_id: int, duration: float) -> None:
+        if motor_id == Motor.ID_OPEN:
+            return self.open(duration)
+        elif motor_id == Motor.ID_CLOSE:
+            return self.close(duration)
+        else:
+            raise ValueError("Unknown motor_id")
+
     def open(self, duration: float) -> None:
         log(f"Motor #{Motor.ID_OPEN} has been started")
 

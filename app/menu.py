@@ -206,10 +206,12 @@ class MainMenu(Menu):
 
     async def loop_edit(self) -> None:
         if self.pos == self.ID_OPEN:
-            motor.open(2.0)
+            settings = SettingService.get(Motor.ID_OPEN)
+            motor.run(Motor.ID_OPEN, settings.duration / settings.divided_by)
             self._leave_edit_mode()
         elif self.pos == self.ID_CLOSE:
-            motor.close(2.0)
+            settings = SettingService.get(Motor.ID_CLOSE)
+            motor.run(Motor.ID_CLOSE, settings.duration / settings.divided_by)
             self._leave_edit_mode()
         else:
             await super().loop_navi()
