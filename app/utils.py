@@ -1,6 +1,8 @@
 import math
 import time
 
+from app.classes import Settings
+
 BASE_CHECKSUM = 42
 
 SECOND = 1
@@ -34,15 +36,13 @@ def get_checksum(data: list[int]) -> int:
     return result
 
 
-def get_time_offsets(data: list[int]) -> list[int]:
-    first_hr, first_min, last_hr, last_min, duration, divided_by = data
+def get_time_offsets(settings: Settings) -> list[int]:
+    first_sec = settings.first_hr * HOUR + settings.first_min * MINUTE
+    last_sec = settings.last_hr * HOUR + settings.last_min * MINUTE
 
-    first_sec = first_hr * HOUR + first_min * MINUTE
-    last_sec = last_hr * HOUR + last_min * MINUTE
-
-    if duration == 0:
+    if settings.duration == 0:
         return []
-    if divided_by < 2:
+    if settings.divided_by < 2:
         return [first_sec]
 
     # handle night schedule
@@ -50,19 +50,19 @@ def get_time_offsets(data: list[int]) -> list[int]:
         last_sec += DAY
 
     total_distance = last_sec - first_sec
-    distance = total_distance / (divided_by - 1)
+    distance = total_distance / (settings.divided_by - 1)
 
     offsets = []
-    for idx in range(divided_by):
+    for idx in range(settings.divided_by):
         offsets.append(round(first_sec + idx * distance) % DAY)
 
     return offsets
 
 
-def get_time_offset_strings(data: list[int]) -> list[bytes]:
+def get_time_offset_strings(settings: Settings) -> list[bytes]:
     strings = []
 
-    for value in get_time_offsets(data):
+    for value in get_time_offsets(settings):
         hour, minute = divmod(value, HOUR)
         minute, second = divmod(minute, MINUTE)
         strings.append(format_time(hour, minute, second))
