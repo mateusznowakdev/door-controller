@@ -2,7 +2,7 @@ import asyncio
 import time
 
 from app.classes import Settings, Task
-from app.hardware import Motor, eeprom, motor
+from app.hardware import Motor, eeprom, motor, rtc
 from app.utils import DAY, SECOND, get_checksum, get_time_offsets, log, verify_checksum
 
 
@@ -36,10 +36,20 @@ class SettingService:
 
 
 class Scheduler:
-    def __init__(self):
+    def __init__(self) -> None:
         self.tasks = self.get_tasks()
+        log("Scheduler has been initialized")
+
+    def restart(self) -> None:
+        self.tasks = self.get_tasks()
+        log("Scheduler has been restarted")
 
     async def loop(self) -> None:
+        await asyncio.sleep(5.0)
+
+        if rtc.lost_power:
+            return
+
         now = time.time()
 
         for idx, task in enumerate(self.tasks):
@@ -51,8 +61,6 @@ class Scheduler:
 
             # skip processing other operations for now
             return
-
-        await asyncio.sleep(5.0)
 
     @staticmethod
     def get_tasks() -> list[Task]:
@@ -87,8 +95,9 @@ class Scheduler:
         return tasks
 
 
-async def scheduler_loop() -> None:
-    scheduler = Scheduler()
+scheduler = Scheduler()
 
+
+async def scheduler_loop() -> None:
     while True:
         await scheduler.loop()

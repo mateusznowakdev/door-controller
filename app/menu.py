@@ -2,7 +2,7 @@ import asyncio
 import time
 
 from app.classes import Settings
-from app.core import SettingService
+from app.core import SettingService, scheduler
 from app.hardware import Display, Keys, Motor, display, keys, motor, rtc
 from app.utils import chunk, clamp, format_time, get_time_offset_strings, log
 
@@ -279,6 +279,7 @@ class MotorMenu(Menu):
 
         if tuple(self.initial) != tuple(self.data):
             SettingService.set(self.name, Settings(*self.data))
+            scheduler.restart()
 
 
 class MotorPreviewMenu(Menu):
@@ -354,6 +355,7 @@ class SystemMenu(Menu):
         if rtc.lost_power or tuple(self.initial) != tuple(self.data):
             h, m = self.data
             rtc.datetime = time.struct_time((2000, 1, 1, h, m, 0, 0, 0, -1))
+            scheduler.restart()
 
 
 async def menu_loop() -> None:
