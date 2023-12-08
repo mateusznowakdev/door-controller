@@ -17,8 +17,6 @@ class Motor:
     ID_OPEN = 0
     ID_CLOSE = 64
 
-    ID_LIST = [ID_OPEN, ID_CLOSE]
-
     def __init__(self) -> None:
         self._motor_f = DigitalInOut(board.GP18)
         self._motor_f.direction = Direction.OUTPUT

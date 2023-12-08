@@ -1,8 +1,8 @@
 import asyncio
 import time
 
+from app import scheduler, settings
 from app.classes import Settings
-from app.core import SettingService, scheduler
 from app.hardware import Display, Keys, Motor, display, keys, motor, rtc
 from app.utils import chunk, clamp, format_time, get_time_offset_strings, log
 
@@ -206,12 +206,10 @@ class MainMenu(Menu):
 
     async def loop_edit(self) -> None:
         if self.pos == self.ID_OPEN:
-            settings = SettingService.get(Motor.ID_OPEN)
-            motor.run(Motor.ID_OPEN, settings.duration_single)
+            motor.run(Motor.ID_OPEN, settings.load(Motor.ID_OPEN).duration_single)
             self._leave_edit_mode()
         elif self.pos == self.ID_CLOSE:
-            settings = SettingService.get(Motor.ID_CLOSE)
-            motor.run(Motor.ID_CLOSE, settings.duration_single)
+            motor.run(Motor.ID_CLOSE, settings.load(Motor.ID_CLOSE).duration_single)
             self._leave_edit_mode()
         else:
             await super().loop_navi()
@@ -248,7 +246,7 @@ class MotorMenu(Menu):
     def __init__(self, name: int) -> None:
         super().__init__()
 
-        self.initial = list(SettingService.get(name))
+        self.initial = list(settings.load(name))
         self.data = list(self.initial)
         self.name = name
 
@@ -278,7 +276,7 @@ class MotorMenu(Menu):
         super().exit()
 
         if tuple(self.initial) != tuple(self.data):
-            SettingService.set(self.name, Settings(*self.data))
+            settings.save(self.name, Settings(*self.data))
             scheduler.restart()
 
 
@@ -358,7 +356,7 @@ class SystemMenu(Menu):
             scheduler.restart()
 
 
-async def menu_loop() -> None:
+async def loop() -> None:
     menu = IdleMenu()
     menu.enter()
 
