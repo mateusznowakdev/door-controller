@@ -135,7 +135,6 @@ class IdleMenu(Menu):
 
         # time should be refreshed even if there is no input
         self.render()
-        await asyncio.sleep(0.9)
 
     async def loop_navi_left(self, duration: float) -> None:
         if duration > 3.0:

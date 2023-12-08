@@ -90,32 +90,37 @@ class Display:
         self._display.create_char(6, Display.CHAR_CUR_A0)
         self._display.create_char(7, Display.CHAR_CUR_A1)
 
-        self._buffer = bytearray(b" " * Display.WIDTH * Display.HEIGHT)
+        self._cur_buffer = bytearray(b" " * Display.WIDTH * Display.HEIGHT)
+        self._old_buffer = self._cur_buffer[:]
         self.clear()
 
         self._backlight = PWMOut(board.GP3)
         self.set_backlight(Display.BACKLIGHT_OFF)
 
     def clear(self) -> None:
-        self._buffer[:] = b" " * len(self._buffer)
+        self._cur_buffer[:] = b" " * len(self._cur_buffer)
 
     def write(self, pos: tuple[int, int], data: bytes) -> None:
         col, row = pos
         byte_id = row * Display.WIDTH + col
 
-        self._buffer[byte_id : byte_id + len(data)] = data
+        self._cur_buffer[byte_id : byte_id + len(data)] = data
 
     def flush(self) -> None:
+        if self._cur_buffer == self._old_buffer:
+            return
+
         lines = []
 
         for row in range(0, Display.HEIGHT):
             first_byte_id = row * Display.WIDTH
             last_byte_id = (row + 1) * Display.WIDTH
 
-            line = "".join(chr(b) for b in self._buffer[first_byte_id:last_byte_id])
+            line = "".join(chr(b) for b in self._cur_buffer[first_byte_id:last_byte_id])
             lines.append(line)
 
         self._display.message = "\n".join(lines)
+        self._old_buffer = self._cur_buffer[:]
 
     def set_default_cursor(self) -> None:
         self._display.create_char(6, Display.CHAR_CUR_A0)
