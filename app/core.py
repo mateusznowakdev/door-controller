@@ -66,10 +66,7 @@ class SchedulerService:
             while ts < now_ts + 10 * SECOND:
                 ts += DAY
 
-            task = Task(
-                ts,
-                lambda: motor.run(motor_id, settings.duration / settings.divided_by),
-            )
+            task = Task(ts, lambda: motor.run(motor_id, settings.duration_single))
             tasks.append(task)
 
         return tasks
