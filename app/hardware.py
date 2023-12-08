@@ -59,10 +59,10 @@ class Motor:
     def run(self, motor_id: int, duration: float) -> None:
         if motor_id == Motor.ID_OPEN:
             return self.open(duration)
-        elif motor_id == Motor.ID_CLOSE:
+        if motor_id == Motor.ID_CLOSE:
             return self.close(duration)
-        else:
-            raise ValueError("Unknown motor_id")
+
+        raise ValueError("Unknown motor_id")
 
     def open(self, duration: float) -> None:
         log(f"Motor #{Motor.ID_OPEN} has been started")
@@ -199,18 +199,22 @@ class Keys:
                 self._key_number = None
                 self._key_timestamp = 0.0
 
+        # no key is pressed
         if self._key_number is None:
             return None, 0.0
 
+        # supported key is held
         diff = time.monotonic() - self._key_timestamp
         if self._key_number in Keys.HOLD_KEYS and diff > Keys.HOLD_THRESHOLD:
             return self._key_number, diff
-        else:
-            if self._press_read:
-                return None, 0.0
-            else:
-                self._press_read = True
-                return self._key_number, 0.0
+
+        # key is pressed but it was acknowledged
+        if self._press_read:
+            return None, 0.0
+
+        # key is pressed
+        self._press_read = True
+        return self._key_number, 0.0
 
 
 wdt = WatchDog()

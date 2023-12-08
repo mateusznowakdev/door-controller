@@ -24,9 +24,8 @@ profile = "black"
 
 [tool.pylint]
 disable = [
-    "fixme", "import-error", "missing-class-docstring", "missing-function-docstring",
-    "missing-module-docstring", "no-else-raise", "no-else-return",
-    "too-few-public-methods", "wrong-import-order"
+    "import-error", "missing-class-docstring", "missing-function-docstring",
+    "missing-module-docstring", "too-few-public-methods", "wrong-import-order"
 ]
 max-locals = 20
 

@@ -343,8 +343,8 @@ class SystemMenu(Menu):
     async def loop_navi_enter(self, duration: float) -> None:
         if self.pos == self.ID_RETURN:
             raise MenuExit()
-        else:
-            await super().loop_navi_enter(duration)
+
+        await super().loop_navi_enter(duration)
 
     def exit(self) -> None:
         super().exit()

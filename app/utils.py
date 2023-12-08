@@ -23,8 +23,8 @@ def clamp(value: int, low: int, hi: int) -> int:
 def format_time(hour: int, minute: int, second: int | None = None) -> bytes:
     if second is None:
         return f"{hour:02}:{minute:02}".encode()
-    else:
-        return f"{hour:02}:{minute:02}:{second:02}".encode()
+
+    return f"{hour:02}:{minute:02}:{second:02}".encode()
 
 
 def get_checksum(data: list[int]) -> int:
