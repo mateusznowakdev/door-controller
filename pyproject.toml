@@ -17,7 +17,8 @@ pytest = "^7.4.3"
 
 [tool.isort]
 extra_standard_library = [
-    "board", "busio", "digitalio", "keypad", "microcontroller", "pwmio", "rtc"
+    "board", "busio", "digitalio", "keypad", "microcontroller", "pwmio", "rtc",
+    "watchdog"
 ]
 profile = "black"
 

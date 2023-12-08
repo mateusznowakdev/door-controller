@@ -4,13 +4,35 @@ import rtc as _rtc
 import time
 from busio import I2C
 from digitalio import DigitalInOut, Direction
+from microcontroller import watchdog
 from pwmio import PWMOut
+from watchdog import WatchDogMode
 
 from adafruit_24lc32 import EEPROM_I2C
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 from adafruit_ds3231 import DS3231
 
 from app.utils import log
+
+
+class WatchDog:
+    TIMEOUT = 8.0
+
+    def __init__(self) -> None:
+        self.wdt_pin = DigitalInOut(board.GP28)
+        self.wdt_pin.direction = Direction.INPUT
+        self.enabled = False
+
+    def feed(self) -> None:
+        if not self.enabled and self.wdt_pin.value is True:
+            watchdog.timeout = WatchDog.TIMEOUT
+            watchdog.mode = WatchDogMode.RESET
+            self.enabled = True
+
+            log("Watchdog has been initialized")
+
+        if self.enabled:
+            watchdog.feed()
 
 
 class Motor:
@@ -24,6 +46,16 @@ class Motor:
         self._motor_b = DigitalInOut(board.GP19)
         self._motor_b.direction = Direction.OUTPUT
 
+    def sleep(self, duration: float) -> None:
+        max_loop_duration = WatchDog.TIMEOUT / 2
+
+        while duration > 0:
+            wdt.feed()
+            time.sleep(max_loop_duration if duration > max_loop_duration else duration)
+            duration -= max_loop_duration
+
+        wdt.feed()
+
     def run(self, motor_id: int, duration: float) -> None:
         if motor_id == Motor.ID_OPEN:
             return self.open(duration)
@@ -36,7 +68,7 @@ class Motor:
         log(f"Motor #{Motor.ID_OPEN} has been started")
 
         self._motor_f.value = True
-        time.sleep(duration)
+        self.sleep(duration)
         self._motor_f.value = False
 
         log(f"Motor #{Motor.ID_OPEN} has been stopped")
@@ -45,7 +77,7 @@ class Motor:
         log(f"Motor #{Motor.ID_CLOSE} has been started")
 
         self._motor_b.value = True
-        time.sleep(duration)
+        self.sleep(duration)
         self._motor_b.value = False
 
         log(f"Motor #{Motor.ID_CLOSE} has been stopped")
@@ -142,7 +174,7 @@ class Keys:
     HOLD_KEYS = [LEFT, RIGHT]
     HOLD_THRESHOLD = 1.0
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._keys = keypad.Keys(
             pins=(board.GP13, board.GP14, board.GP15),
             value_when_pressed=False,
@@ -180,6 +212,9 @@ class Keys:
                 self._press_read = True
                 return self._key_number, 0.0
 
+
+wdt = WatchDog()
+wdt.feed()
 
 i2c = I2C(scl=board.GP11, sda=board.GP10)
 log("I2C bus has been initialized")

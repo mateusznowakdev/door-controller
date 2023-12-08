@@ -3,7 +3,7 @@ import time
 
 from app import settings
 from app.classes import Task
-from app.hardware import Motor, motor, rtc
+from app.hardware import Motor, WatchDog, motor, rtc, wdt
 from app.utils import DAY, SECOND, get_time_offsets, log
 
 _tasks = []
@@ -44,7 +44,8 @@ def get_tasks_by_motor(motor_id: int) -> list[Task]:
 
 
 async def _loop() -> None:
-    await asyncio.sleep(5.0)
+    wdt.feed()
+    await asyncio.sleep(WatchDog.TIMEOUT / 2)
 
     if rtc.lost_power:
         return
