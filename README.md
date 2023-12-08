@@ -1,14 +1,24 @@
-<details>
-<summary>Build and install</summary>
+## Installation instructions
 
-- Install CircuitPython on the Raspberry Pi Pico
-- Set up a development environment using Poetry
-- Download `mpy-cross` binary for CircuitPython
-- Run `upload.sh --full` to install dependencies, build and upload the code
+- Install CircuitPython on the Raspberry Pi Pico. The supported version is defined in the `upload.sh` file.
+- Set up a development environment using the provided Poetry configuration.
+- Download `mpy-cross` binary for the supported CircuitPython
+  version, [detailed instructions can be found here](https://learn.adafruit.com/welcome-to-circuitpython/frequently-asked-questions).
+- Run `upload.sh --full` to install dependencies, build .mpy files, and upload the code.
 
-</details>
+## Pinout
 
-## Usage
+(left to right)
+
+|   | Buttons      | |   | Motor                         | |    | Power        | |    | Watchdog |
+|---|--------------|-|---|-------------------------------|-|----|--------------|-|----|----------|
+| 1 | Ground (GND) | | 5 | Motor A (programmable on/off) | | 9  | +3V3         | | 12 | +3V3     |
+| 2 | Button ⬅️    | | 6 | Motor B (programmable on/off) | | 9  | +3V3         | | 13 | Signal   |
+| 3 | Button ➡️    | | 7 | Motor A (programmable PWM)    | | 10 | Ground (GND) | |    |          |
+| 4 | Button ☑️    | | 8 | Motor B (programmable PWM)    | | 11 | +5V          | |    |          |
+|   |              | |   |                               | | 11 | +5V          | |    |          |
+
+## User menu
 
 There are three buttons on the button board:
 
@@ -47,15 +57,16 @@ This is the motor menu for either the opening or closing operation. The followin
 - Time of the first operation in a series
 - Time of the last operation in a series (does not apply if the divider is set to 1)
 - Total time reserved for all operations
-- Divider (total number of operations in a series)
+- Total number of operations in a series (a _divider_)
 - Preview changes
 - Save and return to the main menu screen
 
-This example configuration will turn on the motor for 25 seconds at 08:00, 11:00, 14:00, and 17:00 every day.
+This example configuration will turn on the motor for approximately 25 seconds at 08:00, 11:00, 14:00, and 17:00 every
+day.
 
-It might be necessary to change these values according to the weather conditions and motor parameters.
+It might be necessary to fine-tune these values according to the weather conditions and motor parameters.
 
-To disable the operation, set the total time to 0.
+To disable any opening or closing operation, set the total time to 0.
 
 ### Preview menu
 
@@ -63,13 +74,17 @@ To disable the operation, set the total time to 0.
 
 This is the list of opening and closing operations to be scheduled.
 
-Use ⬅️ or ➡️ to turn pages, and ☑️ to return to the motor settings menu.
+Use ⬅️ or ➡️ to see other entries, and ☑️ to return to the motor settings menu.
 
 ### System menu
 
 ![](assets/canvas5.png)
 
 This is the system menu. It can be used to change the current time.
+
+Changes **will not** be saved if the new time value is the same as the previous one, even if some time has passed since
+this menu has been entered. Changes **will** be saved, and seconds will be reset to 0 if values are different or if the
+previous time was invalid.
 
 ## Troubleshooting
 
