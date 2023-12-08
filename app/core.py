@@ -2,7 +2,7 @@ import time
 
 from app.classes import Settings, Task
 from app.hardware import Motor, eeprom, motor
-from app.utils import get_checksum, get_time_offsets, log, verify_checksum
+from app.utils import DAY, SECOND, get_checksum, get_time_offsets, log, verify_checksum
 
 
 class SettingService:
@@ -40,7 +40,9 @@ class SchedulerService:
         tasks = []
 
         now = time.localtime()
-        midnight = time.mktime(
+        now_ts = time.mktime(now)
+
+        midnight_ts = time.mktime(
             (now.tm_year, now.tm_mon, now.tm_mday, 0, 0, 0, 0, 0, -1)
         )
 
@@ -48,17 +50,17 @@ class SchedulerService:
         offsets = get_time_offsets(settings)
 
         for offset in offsets:
-            task = Task(
-                time.localtime(midnight + offset),
-                lambda: motor.open(settings.duration / settings.divided_by),
-            )
+            ts = midnight_ts + offset
+            while ts < now_ts + 10 * SECOND:
+                ts += DAY
 
-            # todo: increment time by 1d until it is not earlier than 10s in the future
+            task = Task(ts, lambda: motor.open(settings.duration / settings.divided_by))
+
             # todo: repeat for closing tasks
 
             tasks.append(task)
 
         for event in tasks:
-            print(event)
+            print(event.timestamp, time.localtime(event.timestamp))
 
         return tasks
