@@ -1,5 +1,5 @@
 from app.classes import Settings
-from app.hardware import eeprom
+from app.hardware import Motor, eeprom
 from app.utils import get_checksum, log, verify_checksum
 
 DEFAULTS = Settings(0, 0, 0, 0, 0, 1)
@@ -23,3 +23,8 @@ def save(motor_id: int, obj: Settings) -> None:
     eeprom[motor_id : motor_id + 8] = bytearray(raw)
 
     log(f"Motor #{motor_id} settings have been changed")
+
+
+def reset() -> None:
+    save(Motor.ID_OPEN, DEFAULTS)
+    save(Motor.ID_CLOSE, DEFAULTS)
