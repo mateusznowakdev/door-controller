@@ -30,15 +30,16 @@ class WatchDog:
             watchdog.mode = WatchDogMode.RESET
             self.enabled = True
 
-            log("Watchdog has been initialized")
+            log("Watchdog initialized")
 
         if self.enabled:
             watchdog.feed()
 
 
 class Motor:
-    ID_OPEN = 0
-    ID_CLOSE = 64
+    # Action ID describes the first EEPROM address for its settings
+    ACT_OPEN = 0
+    ACT_CLOSE = 64
 
     def __init__(self) -> None:
         self._motor_f = DigitalInOut(board.GP18)
@@ -57,31 +58,31 @@ class Motor:
 
         wdt.feed()
 
-    def run(self, motor_id: int, duration: float) -> None:
-        if motor_id == Motor.ID_OPEN:
-            return self.open(duration)
-        if motor_id == Motor.ID_CLOSE:
-            return self.close(duration)
-
-        raise ValueError("Unknown motor_id")
+    def run(self, action_id: int, duration: float) -> None:
+        if action_id == Motor.ACT_OPEN:
+            self.open(duration)
+        elif action_id == Motor.ACT_CLOSE:
+            self.close(duration)
+        else:
+            log("Unknown action")
 
     def open(self, duration: float) -> None:
-        log(f"Motor #{Motor.ID_OPEN} has been started")
+        log("Opening started")
 
         self._motor_f.value = True
         self.sleep(duration)
         self._motor_f.value = False
 
-        log(f"Motor #{Motor.ID_OPEN} has been stopped")
+        log("Opening stopped")
 
     def close(self, duration: float) -> None:
-        log(f"Motor #{Motor.ID_CLOSE} has been started")
+        log("Closing started")
 
         self._motor_b.value = True
         self.sleep(duration)
         self._motor_b.value = False
 
-        log(f"Motor #{Motor.ID_CLOSE} has been stopped")
+        log("Closing stopped")
 
 
 class Display:
@@ -222,20 +223,20 @@ wdt = WatchDog()
 wdt.feed()
 
 i2c = I2C(scl=board.GP11, sda=board.GP10)
-log("I2C bus has been initialized")
+log("I2C bus initialized")
 
 rtc = DS3231(i2c)
 _rtc.set_time_source(rtc)
-log("RTC has been initialized")
+log("RTC initialized")
 
 eeprom = EEPROM_I2C(i2c, 0x57)
-log("EEPROM has been initialized")
+log("EEPROM initialized")
 
 motor = Motor()
-log("Motor has been initialized")
+log("Motor initialized")
 
 display = Display()
-log("Display has been initialized")
+log("Display initialized")
 
 keys = Keys()
-log("Keypad has been initialized")
+log("Keypad initialized")

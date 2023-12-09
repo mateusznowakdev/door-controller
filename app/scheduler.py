@@ -12,15 +12,19 @@ _tasks = []
 def init() -> None:
     global _tasks  # pylint:disable=global-statement
 
-    opening_tasks = get_tasks_by_motor(Motor.ID_OPEN)
-    closing_tasks = get_tasks_by_motor(Motor.ID_CLOSE)
+    if rtc.lost_power:
+        log("Could not initialize the scheduler")
+        return
+
+    opening_tasks = get_tasks_for_action(Motor.ACT_OPEN)
+    closing_tasks = get_tasks_for_action(Motor.ACT_CLOSE)
 
     _tasks = opening_tasks + closing_tasks
 
-    log("Scheduler has been initialized")
+    log("Scheduler initialized")
 
 
-def get_tasks_by_motor(motor_id: int) -> list[Task]:
+def get_tasks_for_action(action_id: int) -> list[Task]:
     tasks = []
 
     now = time.localtime()
@@ -28,7 +32,7 @@ def get_tasks_by_motor(motor_id: int) -> list[Task]:
 
     midnight_ts = time.mktime((now.tm_year, now.tm_mon, now.tm_mday, 0, 0, 0, 0, 0, -1))
 
-    motor_settings = settings.load(motor_id)
+    motor_settings = settings.load(action_id)
     offsets = get_time_offsets(motor_settings)
 
     for offset in offsets:
@@ -37,7 +41,7 @@ def get_tasks_by_motor(motor_id: int) -> list[Task]:
         while ts < now_ts + 5 * SECOND:
             ts += DAY
 
-        task = Task(ts, lambda: motor.run(motor_id, motor_settings.duration_single))
+        task = Task(ts, lambda: motor.run(action_id, motor_settings.duration_single))
         tasks.append(task)
 
     return tasks
@@ -47,15 +51,13 @@ async def _loop() -> None:
     wdt.feed()
     await asyncio.sleep(WatchDog.TIMEOUT / 2)
 
-    if rtc.lost_power:
-        return
-
     now = time.time()
 
     for idx, task in enumerate(_tasks):
         if now < task.timestamp:
             continue
 
+        log("Scheduled task is executed")
         task.function()
         _tasks[idx] = Task(task.timestamp + DAY, task.function)
 

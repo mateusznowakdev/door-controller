@@ -54,7 +54,7 @@ class Menu:
         display.flush()
 
     def enter(self) -> None:
-        log(f"Entering {self.__class__.__name__}")
+        log(f"Entering menu: {self.__class__.__name__}")
         self.render()
 
     async def loop(self) -> None:
@@ -214,9 +214,9 @@ class MainMenu(Menu):
 
     async def loop_navi_enter(self, duration: float) -> None:
         if self.pos == self.ID_SET_OPEN:
-            await self._enter_submenu(MotorMenu(Motor.ID_OPEN))
+            await self._enter_submenu(MotorMenu(Motor.ACT_OPEN))
         elif self.pos == self.ID_SET_CLOSE:
-            await self._enter_submenu(MotorMenu(Motor.ID_CLOSE))
+            await self._enter_submenu(MotorMenu(Motor.ACT_CLOSE))
         elif self.pos == self.ID_SET_SYS:
             await self._enter_submenu(SystemMenu())
         elif self.pos == self.ID_RETURN:
@@ -226,10 +226,10 @@ class MainMenu(Menu):
 
     async def loop_edit(self) -> None:
         if self.pos == self.ID_OPEN:
-            motor.run(Motor.ID_OPEN, settings.load(Motor.ID_OPEN).duration_single)
+            motor.run(Motor.ACT_OPEN, settings.load(Motor.ACT_OPEN).duration_single)
             self._leave_edit_mode()
         elif self.pos == self.ID_CLOSE:
-            motor.run(Motor.ID_CLOSE, settings.load(Motor.ID_CLOSE).duration_single)
+            motor.run(Motor.ACT_CLOSE, settings.load(Motor.ACT_CLOSE).duration_single)
             self._leave_edit_mode()
         else:
             await super().loop_navi()
@@ -373,6 +373,7 @@ class SystemMenu(Menu):
         if rtc.lost_power or tuple(self.initial) != tuple(self.data):
             h, m = self.data
             rtc.datetime = time.struct_time((2000, 1, 1, h, m, 0, 0, 0, -1))
+            log("RTC time changed")
             scheduler.restart()
 
 
