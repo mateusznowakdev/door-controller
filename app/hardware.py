@@ -12,7 +12,7 @@ from adafruit_24lc32 import EEPROM_I2C
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 from adafruit_ds3231 import DS3231
 
-from app.utils import log
+from app import logging
 
 
 class WatchDog:
@@ -30,7 +30,7 @@ class WatchDog:
             watchdog.mode = WatchDogMode.RESET
             self.enabled = True
 
-            log("Watchdog initialized")
+            logging.log(logging.WATCHDOG_INIT)
 
         if self.enabled:
             watchdog.feed()
@@ -64,25 +64,25 @@ class Motor:
         elif action_id == Motor.ACT_CLOSE:
             self.close(duration)
         else:
-            log("Unknown action")
+            logging.log(logging.ACT_UNKNOWN)
 
     def open(self, duration: float) -> None:
-        log("Opening started")
+        logging.log(logging.ACT_OPEN_START)
 
         self._motor_f.value = True
         self.sleep(duration)
         self._motor_f.value = False
 
-        log("Opening stopped")
+        logging.log(logging.ACT_OPEN_STOP)
 
     def close(self, duration: float) -> None:
-        log("Closing started")
+        logging.log(logging.ACT_CLOSE_START)
 
         self._motor_b.value = True
         self.sleep(duration)
         self._motor_b.value = False
 
-        log("Closing stopped")
+        logging.log(logging.ACT_CLOSE_STOP)
 
 
 class Display:
@@ -223,20 +223,20 @@ wdt = WatchDog()
 wdt.feed()
 
 i2c = I2C(scl=board.GP11, sda=board.GP10)
-log("I2C bus initialized")
+logging.log(logging.I2C_INIT)
 
 rtc = DS3231(i2c)
 _rtc.set_time_source(rtc)
-log("RTC initialized")
+logging.log(logging.RTC_INIT)
 
 eeprom = EEPROM_I2C(i2c, 0x57)
-log("EEPROM initialized")
+logging.log(logging.EEPROM_INIT)
 
 motor = Motor()
-log("Motor initialized")
+logging.log(logging.MOTOR_INIT)
 
 display = Display()
-log("Display initialized")
+logging.log(logging.DISPLAY_INIT)
 
 keys = Keys()
-log("Keypad initialized")
+logging.log(logging.KEYPAD_INIT)

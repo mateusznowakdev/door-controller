@@ -1,10 +1,10 @@
 import asyncio
 import time
 
-from app import settings
+from app import logging, settings
 from app.classes import Task
 from app.hardware import Motor, WatchDog, motor, rtc, wdt
-from app.utils import DAY, SECOND, get_time_offsets, log
+from app.utils import DAY, SECOND, get_time_offsets
 
 _tasks = []
 
@@ -13,7 +13,7 @@ def init() -> None:
     global _tasks  # pylint:disable=global-statement
 
     if rtc.lost_power:
-        log("Could not initialize the scheduler")
+        logging.log(logging.SCHEDULER_ERR)
         return
 
     opening_tasks = get_tasks_for_action(Motor.ACT_OPEN)
@@ -21,7 +21,7 @@ def init() -> None:
 
     _tasks = opening_tasks + closing_tasks
 
-    log("Scheduler initialized")
+    logging.log(logging.SCHEDULER_INIT)
 
 
 def get_tasks_for_action(action_id: int) -> list[Task]:
@@ -57,7 +57,7 @@ async def _loop() -> None:
         if now < task.timestamp:
             continue
 
-        log("Scheduled task is executed")
+        logging.log(logging.SCHEDULER_ACT)
         task.function()
         _tasks[idx] = Task(task.timestamp + DAY, task.function)
 

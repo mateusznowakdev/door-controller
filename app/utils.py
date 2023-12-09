@@ -1,5 +1,4 @@
 import math
-import time
 
 from app.classes import Settings
 
@@ -68,10 +67,6 @@ def get_time_offset_strings(settings: Settings) -> list[bytes]:
         strings.append(format_time(hour, minute, second))
 
     return strings
-
-
-def log(message: str) -> None:
-    print(f"[{time.monotonic():10.2f}] {message}")
 
 
 def verify_checksum(data: list[int]) -> bool:
