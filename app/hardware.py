@@ -13,6 +13,7 @@ from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 from adafruit_ds3231 import DS3231
 
 from app import logging
+from app.utils import get_checksum
 
 
 class WatchDog:
@@ -37,15 +38,38 @@ class WatchDog:
 
 
 class Logger:
+    START_ADDRESS = 1024
+    END_ADDRESS = 1024 + 128
+
+    FRAME_SIZE = 8
+
+    END_FRAME = bytearray((255, 0, 0, 0, 0, 0, 0, 213))
+
     def __init__(self) -> None:
-        self.address = 1024
+        self.address = self.START_ADDRESS
+
+        raw = eeprom[self.START_ADDRESS:self.END_ADDRESS]
+
+        for address in range(self.START_ADDRESS, self.END_ADDRESS, self.FRAME_SIZE):
+            start = address - self.START_ADDRESS
+            if raw[start : start + self.FRAME_SIZE] == self.END_FRAME:
+                print(f"debug found {address}")
+                self.address = address
+                break
+        else:
+            print(f"debug not found")
 
     def log(self, message_id: int, *args: str) -> None:
         args = list(args) + [f"(log to {self.address})"]
         logging.log(message_id, *args)
 
-        eeprom[self.address] = message_id
-        self.address += 1
+        raw = [message_id, 0, 0, 0, 0, 0, 0]
+        raw.append(get_checksum(raw))
+
+        print(f"debug writing {raw}")
+        eeprom[self.address:self.address + self.FRAME_SIZE] = bytearray(raw)
+        eeprom[self.address + self.FRAME_SIZE : self.address + 2 * self.FRAME_SIZE] = self.END_FRAME
+        self.address += self.FRAME_SIZE
 
 
 class Motor:
