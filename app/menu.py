@@ -1,10 +1,29 @@
 import asyncio
+import os
 import time
 
 from app import scheduler, settings
 from app.classes import Settings
 from app.hardware import Display, Keys, Motor, display, keys, motor, rtc
 from app.utils import chunk, clamp, format_time, get_time_offset_strings, log
+
+TRANSLATIONS = {
+    "pl": {
+        b"Set the clock": b"Ustaw zegar",
+        b"Open": b"Otworz",
+        b"Close": b"Zamknij",
+        b"Set up opening": b"Ust. otwierania",
+        b"Set up closing": b"Ust. zamykania",
+        b"Set system time": b"Ust. czasu sys.",
+        b"Return": b"Powrot",
+    }
+}
+
+LANG = os.getenv("LANG")
+
+
+def _(orig: bytes) -> bytes:
+    return TRANSLATIONS.get(LANG, {}).get(orig, orig)
 
 
 class MenuExit(Exception):
@@ -129,7 +148,7 @@ class IdleMenu(Menu):
         display.write((0, 0), format_time(now.tm_hour, now.tm_min, now.tm_sec))
         display.write((9, 0), f"{int(rtc.temperature):5}".encode())
         display.write((14, 0), b"\xDFC")
-        display.write((0, 1), b"Set the clock" if rtc.lost_power else b"")
+        display.write((0, 1), _(b"Set the clock") if rtc.lost_power else b"")
         display.flush()
 
     async def loop_navi(self) -> None:
@@ -160,12 +179,12 @@ class MainMenu(Menu):
     )
 
     LABELS = (
-        b"Open",
-        b"Close",
-        b"Set up opening",
-        b"Set up closing",
-        b"Set system time",
-        b"Return",
+        _(b"Open"),
+        _(b"Close"),
+        _(b"Set up opening"),
+        _(b"Set up closing"),
+        _(b"Set system time"),
+        _(b"Return"),
     )
 
     ID_OPEN = 0

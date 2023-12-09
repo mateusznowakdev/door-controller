@@ -6,6 +6,16 @@
   version, [detailed instructions can be found here](https://learn.adafruit.com/welcome-to-circuitpython/frequently-asked-questions).
 - Run `upload.sh --full` to install dependencies, build .mpy files, and upload the code.
 
+### Language
+
+Connect the device to the PC and open `settings.toml` file. Add a single `LANG=...` line to change the language of user
+menu.
+
+Available languages:
+
+- English (`LANG="en"`)
+- Polish (`LANG="pl"`)
+
 ## Pinout
 
 (left to right)
