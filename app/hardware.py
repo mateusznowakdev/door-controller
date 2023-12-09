@@ -48,7 +48,9 @@ class Logger:
     def __init__(self) -> None:
         self.address = self.START_ADDRESS
 
-        raw = eeprom[self.START_ADDRESS:self.END_ADDRESS]
+        raw = eeprom[self.START_ADDRESS : self.END_ADDRESS]
+        print(f"debug raw {raw}")
+        print(f"\\xff in raw: {len([x for x in raw if x == 255])}")
 
         for address in range(self.START_ADDRESS, self.END_ADDRESS, self.FRAME_SIZE):
             start = address - self.START_ADDRESS
@@ -57,7 +59,7 @@ class Logger:
                 self.address = address
                 break
         else:
-            print(f"debug not found")
+            print("debug not found")
 
     def log(self, message_id: int, *args: str) -> None:
         args = list(args) + [f"(log to {self.address})"]
@@ -68,10 +70,20 @@ class Logger:
         raw = [message_id, now.tm_hour, now.tm_min, now.tm_sec, 0, 0, 0]
         raw.append(get_checksum(raw))
 
-        print(f"debug writing {raw}")
-        eeprom[self.address:self.address + self.FRAME_SIZE] = bytearray(raw)
-        eeprom[self.address + self.FRAME_SIZE : self.address + 2 * self.FRAME_SIZE] = self.END_FRAME
+        a = self.address
+        b = a + self.FRAME_SIZE
+        print(f"debug writing {a}:{b} -> {raw}")
+        eeprom[a:b] = bytearray(raw)
+
         self.address += self.FRAME_SIZE
+        if self.address == self.END_ADDRESS:
+            print("overlap")
+            self.address = self.START_ADDRESS
+
+        a = self.address
+        b = a + self.FRAME_SIZE
+        print(f"debug writing {a}:{b} -> {list(self.END_FRAME)}")
+        eeprom[a:b] = self.END_FRAME
 
 
 class Motor:
