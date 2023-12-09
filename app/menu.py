@@ -4,7 +4,7 @@ import time
 
 from app import logging, scheduler, settings
 from app.classes import Settings
-from app.hardware import Display, Keys, Motor, display, keys, motor, rtc
+from app.hardware import Display, Keys, Motor, display, keys, logger, motor, rtc
 from app.utils import chunk, clamp, format_time, get_time_offset_strings
 
 TRANSLATIONS = {
@@ -54,7 +54,7 @@ class Menu:
         display.flush()
 
     def enter(self) -> None:
-        logging.log(logging.MENU, self.__class__.__name__)
+        logger.log(logging.MENU, self.__class__.__name__)
         self.render()
 
     async def loop(self) -> None:
@@ -373,7 +373,7 @@ class SystemMenu(Menu):
         if rtc.lost_power or tuple(self.initial) != tuple(self.data):
             h, m = self.data
             rtc.datetime = time.struct_time((2000, 1, 1, h, m, 0, 0, 0, -1))
-            logging.log(logging.RTC_SAVE)
+            logger.log(logging.RTC_SAVE)
             scheduler.restart()
 
 

@@ -36,6 +36,18 @@ class WatchDog:
             watchdog.feed()
 
 
+class Logger:
+    def __init__(self) -> None:
+        self.address = 1024
+
+    def log(self, message_id: int, *args: str) -> None:
+        args = list(args) + [f"(log to {self.address})"]
+        logging.log(message_id, *args)
+
+        eeprom[self.address] = message_id
+        self.address += 1
+
+
 class Motor:
     # Action ID describes the first EEPROM address for its settings
     ACT_OPEN = 0
@@ -64,25 +76,25 @@ class Motor:
         elif action_id == Motor.ACT_CLOSE:
             self.close(duration)
         else:
-            logging.log(logging.ACT_UNKNOWN)
+            logger.log(logging.ACT_UNKNOWN)
 
     def open(self, duration: float) -> None:
-        logging.log(logging.ACT_OPEN_START)
+        logger.log(logging.ACT_OPEN_START)
 
         self._motor_f.value = True
         self.sleep(duration)
         self._motor_f.value = False
 
-        logging.log(logging.ACT_OPEN_STOP)
+        logger.log(logging.ACT_OPEN_STOP)
 
     def close(self, duration: float) -> None:
-        logging.log(logging.ACT_CLOSE_START)
+        logger.log(logging.ACT_CLOSE_START)
 
         self._motor_b.value = True
         self.sleep(duration)
         self._motor_b.value = False
 
-        logging.log(logging.ACT_CLOSE_STOP)
+        logger.log(logging.ACT_CLOSE_STOP)
 
 
 class Display:
@@ -232,11 +244,14 @@ logging.log(logging.RTC_INIT)
 eeprom = EEPROM_I2C(i2c, 0x57)
 logging.log(logging.EEPROM_INIT)
 
+logger = Logger()
+logger.log(logging.LOGGER_INIT)
+
 motor = Motor()
-logging.log(logging.MOTOR_INIT)
+logger.log(logging.MOTOR_INIT)
 
 display = Display()
-logging.log(logging.DISPLAY_INIT)
+logger.log(logging.DISPLAY_INIT)
 
 keys = Keys()
-logging.log(logging.KEYPAD_INIT)
+logger.log(logging.KEYPAD_INIT)

@@ -1,15 +1,14 @@
 import time
 
-from adafruit_24lc32 import EEPROM_I2C
-
 WATCHDOG_INIT = 0
 I2C_INIT = 1
 RTC_INIT = 2
 EEPROM_INIT = 3
-MOTOR_INIT = 4
-DISPLAY_INIT = 5
-KEYPAD_INIT = 6
-SCHEDULER_INIT = 7
+LOGGER_INIT = 4
+MOTOR_INIT = 5
+DISPLAY_INIT = 6
+KEYPAD_INIT = 7
+SCHEDULER_INIT = 8
 
 SETTINGS_LOAD_ERR = 16
 SETTINGS_SAVE = 17
@@ -31,6 +30,7 @@ MESSAGES = {
     I2C_INIT: "I2C bus initialized",
     RTC_INIT: "RTC initialized",
     EEPROM_INIT: "EEPROM initialized",
+    LOGGER_INIT: "Logger initialized",
     MOTOR_INIT: "Motor initialized",
     DISPLAY_INIT: "Display initialized",
     KEYPAD_INIT: "Keypad initialized",
@@ -53,20 +53,5 @@ MESSAGES = {
 }
 
 
-def get_eeprom() -> EEPROM_I2C | None:
-    try:
-        from app.hardware import (  # pylint:disable=cyclic-import,import-outside-toplevel
-            eeprom,
-        )
-
-        return eeprom
-    except ImportError:
-        return None
-
-
 def log(message_id: int, *args: str) -> None:
     print(f"[{time.monotonic():10.2f}] {MESSAGES[message_id]} {' '.join(args)}")
-
-    eeprom = get_eeprom()
-    if eeprom:
-        eeprom[128] = message_id
