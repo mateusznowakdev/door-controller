@@ -1,5 +1,7 @@
 import time
 
+from adafruit_24lc32 import EEPROM_I2C
+
 WATCHDOG_INIT = 0
 I2C_INIT = 1
 RTC_INIT = 2
@@ -51,5 +53,20 @@ MESSAGES = {
 }
 
 
+def get_eeprom() -> EEPROM_I2C | None:
+    try:
+        from app.hardware import (  # pylint:disable=cyclic-import,import-outside-toplevel
+            eeprom,
+        )
+
+        return eeprom
+    except ImportError:
+        return None
+
+
 def log(message_id: int, *args: str) -> None:
     print(f"[{time.monotonic():10.2f}] {MESSAGES[message_id]} {' '.join(args)}")
+
+    eeprom = get_eeprom()
+    if eeprom:
+        eeprom[128] = message_id
