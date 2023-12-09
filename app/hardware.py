@@ -63,7 +63,9 @@ class Logger:
         args = list(args) + [f"(log to {self.address})"]
         logging.log(message_id, *args)
 
-        raw = [message_id, 0, 0, 0, 0, 0, 0]
+        now = time.localtime()
+
+        raw = [message_id, now.tm_hour, now.tm_min, now.tm_sec, 0, 0, 0]
         raw.append(get_checksum(raw))
 
         print(f"debug writing {raw}")
