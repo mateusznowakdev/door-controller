@@ -229,7 +229,6 @@ _rtc.set_time_source(rtc)
 log("RTC has been initialized")
 
 eeprom = EEPROM_I2C(i2c, 0x57)
-eeprom._max_size = 32768  # pylint:disable=protected-access
 log("EEPROM has been initialized")
 
 motor = Motor()
