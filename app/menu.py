@@ -2,9 +2,9 @@ import asyncio
 import time
 
 from app import const
-from app.common import chunk, clamp, format_time, get_time_offsets, log
 from app.const import _
 from app.core import display, keys, logger, motor, rtc, scheduler, settings, wdt
+from app.shared import chunk, clamp, format_time, get_time_offsets, log
 from app.types import SettingsT
 
 
@@ -294,10 +294,10 @@ class PreviewMenu(Menu):
     def get_min_max_cursors(self) -> tuple[int, int]:
         return 0, len(self.data) - 1
 
-    def get_time_offset_strings(self, s: SettingsT) -> list[bytes]:
+    def get_time_offset_strings(self, data: SettingsT) -> list[bytes]:
         strings = []
 
-        for value in get_time_offsets(s):
+        for value in get_time_offsets(data):
             hour, minute = divmod(value, const.HOUR)
             minute, second = divmod(minute, const.MINUTE)
             strings.append(format_time(hour, minute, second))

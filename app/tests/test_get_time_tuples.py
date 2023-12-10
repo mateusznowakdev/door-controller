@@ -1,4 +1,4 @@
-from app.common import get_time_offsets
+from app.shared import get_time_offsets
 from app.types import SettingsT
 
 S = 1
