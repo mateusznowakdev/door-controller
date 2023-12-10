@@ -15,6 +15,7 @@ from app.core import (
     rtc,
     scheduler,
     settings,
+    wdt,
 )
 
 TRANSLATIONS = {
@@ -157,9 +158,8 @@ class IdleMenu(Menu):
 
         display.clear()
         display.write((0, 0), format_time(now.tm_hour, now.tm_min, now.tm_sec))
-        display.write((9, 0), f"{int(rtc.temperature):5}".encode())
-        display.write((14, 0), b"\xDFC")
-        display.write((0, 1), _(b"Set the clock") if rtc.lost_power else b"")
+        display.write((11, 0), _(b"\x05!") if not wdt.enabled else b"")
+        display.write((14, 0), _(b"\x04!") if rtc.lost_power else b"")
         display.flush()
 
     async def loop_navi(self) -> None:
