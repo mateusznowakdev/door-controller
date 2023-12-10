@@ -2,9 +2,10 @@ import asyncio
 import time
 
 from app import const
-from app.common import SettingsGroup, chunk, clamp, format_time, get_time_offsets, log
+from app.common import chunk, clamp, format_time, get_time_offsets, log
 from app.const import _
 from app.core import display, keys, logger, motor, rtc, scheduler, settings, wdt
+from app.types import SettingsT
 
 
 class MenuExit(Exception):
@@ -271,7 +272,7 @@ class MotorMenu(Menu):
 
     async def loop_navi_enter(self, duration: float) -> None:
         if self.pos == self.ID_PREVIEW:
-            await self._enter_submenu(MotorPreviewMenu(SettingsGroup(*self.data)))
+            await self._enter_submenu(PreviewMenu(SettingsT(*self.data)))
         elif self.pos == self.ID_RETURN:
             raise MenuExit()
         else:
@@ -281,19 +282,19 @@ class MotorMenu(Menu):
         super().exit()
 
         if tuple(self.initial) != tuple(self.data):
-            settings.save(self.name, SettingsGroup(*self.data))
+            settings.save(self.name, SettingsT(*self.data))
             scheduler.restart()
 
 
-class MotorPreviewMenu(Menu):
-    def __init__(self, data: SettingsGroup) -> None:
+class PreviewMenu(Menu):
+    def __init__(self, data: SettingsT) -> None:
         super().__init__()
         self.data = chunk(self.get_time_offset_strings(data), 2)
 
     def get_min_max_cursors(self) -> tuple[int, int]:
         return 0, len(self.data) - 1
 
-    def get_time_offset_strings(self, s: SettingsGroup) -> list[bytes]:
+    def get_time_offset_strings(self, s: SettingsT) -> list[bytes]:
         strings = []
 
         for value in get_time_offsets(s):

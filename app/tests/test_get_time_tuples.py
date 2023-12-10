@@ -1,4 +1,5 @@
-from app.common import SettingsGroup, get_time_offsets
+from app.common import get_time_offsets
+from app.types import SettingsT
 
 S = 1
 M = 60 * S
@@ -18,7 +19,7 @@ def test_day_schedule():
         16 * H + 33 * M + 20 * S,
         17 * H + 30 * M + 0 * S,
     ]
-    actual = get_time_offsets(SettingsGroup(9, 0, 17, 30, 456, 10))
+    actual = get_time_offsets(SettingsT(9, 0, 17, 30, 456, 10))
 
     assert expected == actual
 
@@ -28,7 +29,7 @@ def test_day_schedule_split_by_two():
         9 * H + 0 * M,
         17 * H + 30 * M,
     ]
-    actual = get_time_offsets(SettingsGroup(9, 0, 17, 30, 456, 2))
+    actual = get_time_offsets(SettingsT(9, 0, 17, 30, 456, 2))
 
     assert expected == actual
 
@@ -37,14 +38,14 @@ def test_day_schedule_split_by_one():
     expected = [
         9 * H + 0 * M,
     ]
-    actual = get_time_offsets(SettingsGroup(9, 0, 17, 30, 456, 1))
+    actual = get_time_offsets(SettingsT(9, 0, 17, 30, 456, 1))
 
     assert expected == actual
 
 
 def test_day_schedule_no_time():
     expected = []
-    actual = get_time_offsets(SettingsGroup(9, 0, 17, 30, 0, 10))
+    actual = get_time_offsets(SettingsT(9, 0, 17, 30, 0, 10))
 
     assert expected == actual
 
@@ -62,6 +63,6 @@ def test_night_schedule():
         7 * H + 16 * M + 40 * S,
         9 * H + 0 * M + 0 * S,
     ]
-    actual = get_time_offsets(SettingsGroup(17, 30, 9, 0, 456, 10))
+    actual = get_time_offsets(SettingsT(17, 30, 9, 0, 456, 10))
 
     assert expected == actual

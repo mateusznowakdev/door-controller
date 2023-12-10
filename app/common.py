@@ -1,29 +1,10 @@
 import math
 import time
-from collections import namedtuple
 
 from app import const
+from app.types import SettingsT
 
 BASE_CHECKSUM = 42
-
-LogEntry = namedtuple(
-    "LogEntry",
-    ("id", "message", "hour", "minute", "second"),
-)
-_SettingsGroup = namedtuple(
-    "_SettingsGroup",
-    ("first_hr", "first_min", "last_hr", "last_min", "duration", "divided_by"),
-)
-Task = namedtuple(
-    "Task",
-    ("timestamp", "function"),
-)
-
-
-class SettingsGroup(_SettingsGroup):
-    @property
-    def duration_single(self) -> float:
-        return self.duration / self.divided_by
 
 
 def chunk(items: list, size: int) -> list[tuple]:
@@ -51,7 +32,7 @@ def get_checksum(data: list[int]) -> int:
     return result
 
 
-def get_time_offsets(settings: SettingsGroup) -> list[int]:
+def get_time_offsets(settings: SettingsT) -> list[int]:
     first_sec = settings.first_hr * const.HOUR + settings.first_min * const.MINUTE
     last_sec = settings.last_hr * const.HOUR + settings.last_min * const.MINUTE
 

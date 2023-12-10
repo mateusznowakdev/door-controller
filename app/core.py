@@ -14,16 +14,9 @@ from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 from adafruit_ds3231 import DS3231
 
 from app import const
-from app.common import (
-    LogEntry,
-    SettingsGroup,
-    Task,
-    get_checksum,
-    get_time_offsets,
-    log,
-    verify_checksum,
-)
+from app.common import get_checksum, get_time_offsets, log, verify_checksum
 from app.const import _
+from app.types import LogT, SettingsT, TaskT
 
 
 class _WatchDog:
@@ -66,7 +59,7 @@ class _Logger:
                 self.address = address
                 break
 
-    def get(self, log_id: int) -> LogEntry:
+    def get(self, log_id: int) -> LogT:
         address = self.address
         for __ in range(log_id + 1):
             address -= self.FRAME_SIZE
@@ -75,9 +68,9 @@ class _Logger:
 
         raw = eeprom[address : address + self.FRAME_SIZE]
         if not verify_checksum(raw):
-            return LogEntry(255, _(255), 0, 0, 0)
+            return LogT(255, _(255), 0, 0, 0)
 
-        return LogEntry(raw[0], _(raw[0]), raw[1], raw[2], raw[3])
+        return LogT(raw[0], _(raw[0]), raw[1], raw[2], raw[3])
 
     def log(self, message_id: int) -> None:
         log(_(message_id))
@@ -284,20 +277,18 @@ class _Keys:
 
 
 class _Settings:
-    DEFAULTS = SettingsGroup(0, 0, 0, 0, 0, 1)
+    DEFAULTS = SettingsT(0, 0, 0, 0, 0, 1)
 
-    def load(self, action_id: int) -> SettingsGroup:
+    def load(self, action_id: int) -> SettingsT:
         raw = eeprom[action_id : action_id + 8]
 
         if not verify_checksum(raw):
             logger.log(const.SETTINGS_LOAD_ERR)
             return self.DEFAULTS
 
-        return SettingsGroup(
-            raw[0], raw[1], raw[2], raw[3], raw[4] + raw[5] * 256, raw[6]
-        )
+        return SettingsT(raw[0], raw[1], raw[2], raw[3], raw[4] + raw[5] * 256, raw[6])
 
-    def save(self, action_id: int, obj: SettingsGroup) -> None:
+    def save(self, action_id: int, obj: SettingsT) -> None:
         raw = [obj[0], obj[1], obj[2], obj[3], obj[4] % 256, obj[4] // 256, obj[5]]
         raw.append(get_checksum(raw))
 
@@ -317,7 +308,7 @@ class _Scheduler:
     def restart(self) -> None:
         self.tasks = self.get_tasks()
 
-    def get_tasks(self) -> list[Task]:
+    def get_tasks(self) -> list[TaskT]:
         if rtc.lost_power:
             logger.log(const.SCHEDULER_ERR)
             return []
@@ -328,7 +319,7 @@ class _Scheduler:
         logger.log(const.SCHEDULER_INIT)
         return opening_tasks + closing_tasks
 
-    def get_tasks_for_action(self, action_id: int) -> list[Task]:
+    def get_tasks_for_action(self, action_id: int) -> list[TaskT]:
         tasks = []
 
         now = time.localtime()
@@ -347,7 +338,7 @@ class _Scheduler:
             while ts < now_ts + 5 * const.SECOND:
                 ts += const.DAY
 
-            task = Task(
+            task = TaskT(
                 ts,
                 lambda: motor.run(action_id, motor_settings.duration_single),
             )
@@ -367,7 +358,7 @@ class _Scheduler:
 
             logger.log(const.SCHEDULER_ACT)
             task.function()
-            self.tasks[idx] = Task(task.timestamp + const.DAY, task.function)
+            self.tasks[idx] = TaskT(task.timestamp + const.DAY, task.function)
 
             # skip processing other operations for now
             return
