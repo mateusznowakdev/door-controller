@@ -61,6 +61,17 @@ class Logger:
         else:
             print("debug not found")
 
+    def get(self, log_id: int) -> bytes:
+        address = self.address
+        for x in range(log_id + 1):
+            address -= self.FRAME_SIZE
+            if address < self.START_ADDRESS:
+                address = self.END_ADDRESS - self.FRAME_SIZE
+
+        print(f"current {self.address}")
+        print(f"debug get from {address}")
+        return eeprom[address : address + self.FRAME_SIZE]
+
     def log(self, message_id: int, *args: str) -> None:
         args = list(args) + [f"(log to {self.address})"]
         logging.log(message_id, *args)

@@ -15,6 +15,7 @@ TRANSLATIONS = {
         b"Set up opening": b"Ust. otwierania",
         b"Set up closing": b"Ust. zamykania",
         b"Set system time": b"Ust. czasu sys.",
+        b"History": b"Historia",
         b"Return": b"Powrot",
     }
 }
@@ -176,6 +177,7 @@ class MainMenu(Menu):
         ((6, 0), (8, 0)),
         ((8, 0), (10, 0)),
         ((10, 0), (12, 0)),
+        ((12, 0), (14, 0)),
     )
 
     LABELS = (
@@ -184,6 +186,7 @@ class MainMenu(Menu):
         _(b"Set up opening"),
         _(b"Set up closing"),
         _(b"Set system time"),
+        _(b"History"),
         _(b"Return"),
     )
 
@@ -192,7 +195,8 @@ class MainMenu(Menu):
     ID_SET_OPEN = 2
     ID_SET_CLOSE = 3
     ID_SET_SYS = 4
-    ID_RETURN = 5
+    ID_HISTORY = 5
+    ID_RETURN = 6
 
     def get_label(self) -> bytes:
         return self.LABELS[self.pos]
@@ -206,7 +210,7 @@ class MainMenu(Menu):
         label = self.get_label()
 
         display.clear()
-        display.write((1, 0), b"\x00 \x01 \x7E \x7F \x04 \x05")
+        display.write((1, 0), b"\x00 \x01 \x7E \x7F \x04 \x02 \x05")
         display.write((1, 1), label)
         display.write(ca, b"\x06")
         display.write(cb, b"\x07")
@@ -219,6 +223,8 @@ class MainMenu(Menu):
             await self._enter_submenu(MotorMenu(Motor.ACT_CLOSE))
         elif self.pos == self.ID_SET_SYS:
             await self._enter_submenu(SystemMenu())
+        elif self.pos == self.ID_HISTORY:
+            await self._enter_submenu(HistoryMenu())
         elif self.pos == self.ID_RETURN:
             raise MenuExit()
         else:
@@ -375,6 +381,28 @@ class SystemMenu(Menu):
             rtc.datetime = time.struct_time((2000, 1, 1, h, m, 0, 0, 0, -1))
             logger.log(logging.RTC_SAVE)
             scheduler.restart()
+
+
+class HistoryMenu(Menu):
+    LOG_COUNT = 50
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.pos = self.LOG_COUNT
+
+    def get_min_max_cursors(self) -> tuple[int, int]:
+        return 1, self.LOG_COUNT
+
+    def render(self) -> None:
+        text = logger.get(self.LOG_COUNT - self.pos)
+        display.clear()
+        display.write((2, 0), b"Log")
+        display.write((6, 0), f"{self.LOG_COUNT - self.pos}".encode())
+        display.write((2, 1), text)
+        display.flush()
+
+    async def loop_navi_enter(self, duration: float) -> None:
+        raise MenuExit()
 
 
 async def loop() -> None:
