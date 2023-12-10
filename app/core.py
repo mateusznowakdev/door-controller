@@ -28,6 +28,9 @@ class _WatchDog:
         self.enabled = False
 
     def feed(self) -> None:
+        # watchdog will be enabled as soon as wdt_pin is detected to be HIGH,
+        # and it cannot be disabled before restart
+
         if not self.enabled and self.wdt_pin.value is True:
             watchdog.timeout = self.TIMEOUT
             watchdog.mode = WatchDogMode.RESET
@@ -40,30 +43,38 @@ class _WatchDog:
 
 
 class _Logger:
-    START_ADDRESS = 1024
-    END_ADDRESS = 1024 + 128
+    FIRST_BYTE = 1024
+    LAST_BYTE = 2048
 
     FRAME_SIZE = 8
 
-    END_FRAME = bytearray((255, 0, 0, 0, 0, 0, 0, 213))
+    END_FRAME = [255, 0, 0, 0, 0, 0, 0]
+    END_FRAME.append(get_checksum(END_FRAME))
 
     def __init__(self) -> None:
-        self.address = self.START_ADDRESS
+        self.address = self.FIRST_BYTE
 
-        raw = eeprom[self.START_ADDRESS : self.END_ADDRESS]
+        # copy EEPROM to RAM
+        raw = eeprom[self.FIRST_BYTE : self.LAST_BYTE]
 
-        for address in range(self.START_ADDRESS, self.END_ADDRESS, self.FRAME_SIZE):
-            start = address - self.START_ADDRESS
-            if raw[start : start + self.FRAME_SIZE] == self.END_FRAME:
+        for address in range(self.FIRST_BYTE, self.LAST_BYTE, self.FRAME_SIZE):
+            first = address - self.FIRST_BYTE
+            last = first + self.FRAME_SIZE
+
+            if raw[first:last] == bytearray(self.END_FRAME):
+                # found location for the next write
                 self.address = address
                 break
 
     def get(self, log_id: int) -> LogT:
-        address = self.address
-        for __ in range(log_id + 1):
-            address -= self.FRAME_SIZE
-            if address < self.START_ADDRESS:
-                address = self.END_ADDRESS - self.FRAME_SIZE
+        # self.address is the location of the end frame
+        # so the #0 is self.address-8
+        #        #1 is self.address-16, and so on
+        address = self.address - (log_id + 1) * self.FRAME_SIZE
+
+        # handle wraparound
+        while address < self.FIRST_BYTE:
+            address += self.LAST_BYTE - self.FIRST_BYTE
 
         raw = eeprom[address : address + self.FRAME_SIZE]
         if not verify_checksum(raw):
@@ -79,21 +90,25 @@ class _Logger:
         raw = [message_id, now.tm_hour, now.tm_min, now.tm_sec, 0, 0, 0]
         raw.append(get_checksum(raw))
 
-        a = self.address
-        b = a + self.FRAME_SIZE
-        eeprom[a:b] = bytearray(raw)
+        # write log data
+        first = self.address
+        last = first + self.FRAME_SIZE
+        eeprom[first:last] = bytearray(raw)
 
+        # handle wraparound
         self.address += self.FRAME_SIZE
-        if self.address == self.END_ADDRESS:
-            self.address = self.START_ADDRESS
+        if self.address >= self.LAST_BYTE:
+            self.address = self.FIRST_BYTE
 
-        a = self.address
-        b = a + self.FRAME_SIZE
-        eeprom[a:b] = self.END_FRAME
+        # write end frame data
+        # the same location will be used for next log write
+        first = self.address
+        last = first + self.FRAME_SIZE
+        eeprom[first:last] = self.END_FRAME
 
 
 class _Motor:
-    # Action ID describes the first EEPROM address for its settings
+    # action ID describes the first EEPROM address for its settings
     ACT_OPEN = 0
     ACT_CLOSE = 64
 
