@@ -1,5 +1,3 @@
-import time
-
 WATCHDOG_INIT = 0
 I2C_INIT = 1
 RTC_INIT = 2
@@ -57,7 +55,3 @@ MESSAGES = {
     #
     LOG_INVALID: "Invalid entry",
 }
-
-
-def log(message_id: int, *args: str) -> None:
-    print(f"[{time.monotonic():10.2f}] {MESSAGES[message_id]} {' '.join(args)}")

@@ -2,7 +2,7 @@ import asyncio
 import os
 import time
 
-from app import logging
+from app import const
 from app.common import SettingsGroup, chunk, clamp, format_time, get_time_offset_strings
 from app.core import (
     Display,
@@ -65,7 +65,7 @@ class Menu:
         display.flush()
 
     def enter(self) -> None:
-        logger.log(logging.MENU, self.__class__.__name__)
+        logger.log(const.MENU, self.__class__.__name__)
         self.render()
 
     async def loop(self) -> None:
@@ -389,7 +389,7 @@ class SystemMenu(Menu):
         if rtc.lost_power or tuple(self.initial) != tuple(self.data):
             h, m = self.data
             rtc.datetime = time.struct_time((2000, 1, 1, h, m, 0, 0, 0, -1))
-            logger.log(logging.RTC_SAVE)
+            logger.log(const.RTC_SAVE)
             scheduler.restart()
 
 

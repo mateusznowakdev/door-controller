@@ -13,7 +13,7 @@ from adafruit_24lc32 import EEPROM_I2C
 from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 from adafruit_ds3231 import DS3231
 
-from app import logging
+from app import const
 from app.common import (
     DAY,
     SECOND,
@@ -22,6 +22,7 @@ from app.common import (
     Task,
     get_checksum,
     get_time_offsets,
+    log,
     verify_checksum,
 )
 
@@ -41,7 +42,7 @@ class WatchDog:
             watchdog.mode = WatchDogMode.RESET
             self.enabled = True
 
-            logging.log(logging.WATCHDOG_INIT)
+            log(const.WATCHDOG_INIT)
 
         if self.enabled:
             watchdog.feed()
@@ -75,13 +76,13 @@ class Logger:
 
         raw = eeprom[address : address + self.FRAME_SIZE]
         if not verify_checksum(raw):
-            return LogEntry(255, logging.MESSAGES[255], 0, 0, 0)
+            return LogEntry(255, const.MESSAGES[255], 0, 0, 0)
 
-        return LogEntry(raw[0], logging.MESSAGES[raw[0]], raw[1], raw[2], raw[3])
+        return LogEntry(raw[0], const.MESSAGES[raw[0]], raw[1], raw[2], raw[3])
 
     def log(self, message_id: int, *args: str) -> None:
-        args = list(args) + [f"(log to {self.address})"]
-        logging.log(message_id, *args)
+        args = list(args) + [f"(log to byte #{self.address})"]
+        log(message_id, *args)
 
         now = time.localtime()
 
@@ -129,25 +130,25 @@ class Motor:
         elif action_id == Motor.ACT_CLOSE:
             self.close(duration)
         else:
-            logger.log(logging.ACT_UNKNOWN)
+            logger.log(const.ACT_UNKNOWN)
 
     def open(self, duration: float) -> None:
-        logger.log(logging.ACT_OPEN_START)
+        logger.log(const.ACT_OPEN_START)
 
         self._motor_f.value = True
         self.sleep(duration)
         self._motor_f.value = False
 
-        logger.log(logging.ACT_OPEN_STOP)
+        logger.log(const.ACT_OPEN_STOP)
 
     def close(self, duration: float) -> None:
-        logger.log(logging.ACT_CLOSE_START)
+        logger.log(const.ACT_CLOSE_START)
 
         self._motor_b.value = True
         self.sleep(duration)
         self._motor_b.value = False
 
-        logger.log(logging.ACT_CLOSE_STOP)
+        logger.log(const.ACT_CLOSE_STOP)
 
 
 class Display:
@@ -291,7 +292,7 @@ class Settings:
         raw = eeprom[action_id : action_id + 8]
 
         if not verify_checksum(raw):
-            logger.log(logging.SETTINGS_LOAD_ERR)
+            logger.log(const.SETTINGS_LOAD_ERR)
             return self.DEFAULTS
 
         return SettingsGroup(
@@ -304,7 +305,7 @@ class Settings:
 
         eeprom[action_id : action_id + 8] = bytearray(raw)
 
-        logger.log(logging.SETTINGS_SAVE)
+        logger.log(const.SETTINGS_SAVE)
 
     def reset(self) -> None:
         self.save(Motor.ACT_OPEN, self.DEFAULTS)
@@ -314,15 +315,15 @@ class Settings:
 class Scheduler:
     def __init__(self) -> None:
         self.tasks = self.get_tasks()
-        logger.log(logging.SCHEDULER_INIT)
+        logger.log(const.SCHEDULER_INIT)
 
     def restart(self) -> None:
         self.tasks = self.get_tasks()
-        logger.log(logging.SCHEDULER_RST)
+        logger.log(const.SCHEDULER_RST)
 
     def get_tasks(self) -> list[Task]:
         if rtc.lost_power:
-            logger.log(logging.SCHEDULER_ERR)
+            logger.log(const.SCHEDULER_ERR)
             return []
 
         opening_tasks = self.get_tasks_for_action(Motor.ACT_OPEN)
@@ -367,7 +368,7 @@ class Scheduler:
             if now < task.timestamp:
                 continue
 
-            logger.log(logging.SCHEDULER_ACT)
+            logger.log(const.SCHEDULER_ACT)
             task.function()
             self.tasks[idx] = Task(task.timestamp + DAY, task.function)
 
@@ -379,26 +380,26 @@ wdt = WatchDog()
 wdt.feed()
 
 i2c = I2C(scl=board.GP11, sda=board.GP10)
-logging.log(logging.I2C_INIT)
+log(const.I2C_INIT)
 
 rtc = DS3231(i2c)
 _rtc.set_time_source(rtc)
-logging.log(logging.RTC_INIT)
+log(const.RTC_INIT)
 
 eeprom = EEPROM_I2C(i2c, 0x57)
-logging.log(logging.EEPROM_INIT)
+log(const.EEPROM_INIT)
 
 logger = Logger()
-logger.log(logging.LOGGER_INIT)
+logger.log(const.LOGGER_INIT)
 
 motor = Motor()
-logger.log(logging.MOTOR_INIT)
+logger.log(const.MOTOR_INIT)
 
 display = Display()
-logger.log(logging.DISPLAY_INIT)
+logger.log(const.DISPLAY_INIT)
 
 keys = Keys()
-logger.log(logging.KEYPAD_INIT)
+logger.log(const.KEYPAD_INIT)
 
 settings = Settings()
 scheduler = Scheduler()

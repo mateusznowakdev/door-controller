@@ -1,5 +1,8 @@
 import math
+import time
 from collections import namedtuple
+
+from app.const import MESSAGES
 
 BASE_CHECKSUM = 42
 
@@ -85,6 +88,10 @@ def get_time_offset_strings(settings: SettingsGroup) -> list[bytes]:
         strings.append(format_time(hour, minute, second))
 
     return strings
+
+
+def log(message_id: int, *args: str) -> None:
+    print(f"[{time.monotonic():10.2f}] {MESSAGES[message_id]} {' '.join(args)}")
 
 
 def verify_checksum(data: list[int]) -> bool:
