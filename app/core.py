@@ -313,11 +313,9 @@ class Settings:
 class Scheduler:
     def __init__(self) -> None:
         self.tasks = self.get_tasks()
-        logger.log(const.SCHEDULER_INIT)
 
     def restart(self) -> None:
         self.tasks = self.get_tasks()
-        logger.log(const.SCHEDULER_RST)
 
     def get_tasks(self) -> list[Task]:
         if rtc.lost_power:
@@ -327,6 +325,7 @@ class Scheduler:
         opening_tasks = self.get_tasks_for_action(Motor.ACT_OPEN)
         closing_tasks = self.get_tasks_for_action(Motor.ACT_CLOSE)
 
+        logger.log(const.SCHEDULER_INIT)
         return opening_tasks + closing_tasks
 
     def get_tasks_for_action(self, action_id: int) -> list[Task]:

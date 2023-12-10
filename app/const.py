@@ -12,9 +12,8 @@ SETTINGS_SAVE = 17
 RTC_SAVE = 18
 
 SCHEDULER_INIT = 32
-SCHEDULER_RST = 33
-SCHEDULER_ERR = 34
-SCHEDULER_ACT = 35
+SCHEDULER_ERR = 33
+SCHEDULER_ACT = 34
 
 ACT_OPEN_START = 48
 ACT_OPEN_STOP = 49
@@ -38,7 +37,6 @@ TRANSLATIONS = {
         SETTINGS_SAVE: "Settings updated",
         RTC_SAVE: "Clock updated",
         SCHEDULER_INIT: "Scheduler start",
-        SCHEDULER_RST: "Scheduler rstart",
         SCHEDULER_ERR: "Clock error",
         SCHEDULER_ACT: "Task start",
         ACT_OPEN_START: "Opening",
@@ -55,12 +53,11 @@ TRANSLATIONS = {
         MENU_RETURN: "Return",
     },
     "pl": {
-        BOARD_INIT: "Uruchomienie",
+        BOARD_INIT: "Start urzadzenia",
         SETTINGS_LOAD_ERR: "Blad ustawien",
         SETTINGS_SAVE: "Zmiana ustawien",
         RTC_SAVE: "Zmiana czasu",
         SCHEDULER_INIT: "Start planisty",
-        SCHEDULER_RST: "Restart planisty",
         SCHEDULER_ERR: "Blad zegara",
         SCHEDULER_ACT: "Start zadania",
         ACT_OPEN_START: "Otwieranie",
