@@ -3,14 +3,7 @@ import os
 import time
 
 from app import const
-from app.common import (
-    SettingsGroup,
-    chunk,
-    clamp,
-    format_time,
-    get_time_offset_strings,
-    log,
-)
+from app.common import SettingsGroup, chunk, clamp, format_time, get_time_offsets, log
 from app.core import (
     Display,
     Keys,
@@ -326,10 +319,20 @@ class MotorMenu(Menu):
 class MotorPreviewMenu(Menu):
     def __init__(self, data: SettingsGroup) -> None:
         super().__init__()
-        self.data = chunk(get_time_offset_strings(data), 2)
+        self.data = chunk(self.get_time_offset_strings(data), 2)
 
     def get_min_max_cursors(self) -> tuple[int, int]:
         return 0, len(self.data) - 1
+
+    def get_time_offset_strings(self, s: SettingsGroup) -> list[bytes]:
+        strings = []
+
+        for value in get_time_offsets(s):
+            hour, minute = divmod(value, const.HOUR)
+            minute, second = divmod(minute, const.MINUTE)
+            strings.append(format_time(hour, minute, second))
+
+        return strings
 
     def render(self) -> None:
         display.clear()

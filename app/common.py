@@ -74,17 +74,6 @@ def get_time_offsets(settings: SettingsGroup) -> list[int]:
     return offsets
 
 
-def get_time_offset_strings(settings: SettingsGroup) -> list[bytes]:
-    strings = []
-
-    for value in get_time_offsets(settings):
-        hour, minute = divmod(value, const.HOUR)
-        minute, second = divmod(minute, const.MINUTE)
-        strings.append(format_time(hour, minute, second))
-
-    return strings
-
-
 def log(message: str) -> None:
     print(f"[{time.monotonic():10.2f}] {message}")
 
