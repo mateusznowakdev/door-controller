@@ -15,8 +15,6 @@ from adafruit_ds3231 import DS3231
 
 from app import const
 from app.common import (
-    DAY,
-    SECOND,
     LogEntry,
     SettingsGroup,
     Task,
@@ -347,8 +345,8 @@ class Scheduler:
         for offset in offsets:
             # add extra 5s delay before any task can be run
             ts = midnight_ts + offset
-            while ts < now_ts + 5 * SECOND:
-                ts += DAY
+            while ts < now_ts + 5 * const.SECOND:
+                ts += const.DAY
 
             task = Task(
                 ts,
@@ -370,7 +368,7 @@ class Scheduler:
 
             logger.log(const.SCHEDULER_ACT)
             task.function()
-            self.tasks[idx] = Task(task.timestamp + DAY, task.function)
+            self.tasks[idx] = Task(task.timestamp + const.DAY, task.function)
 
             # skip processing other operations for now
             return
