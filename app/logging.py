@@ -25,6 +25,8 @@ ACT_UNKNOWN = 52
 
 MENU = 64
 
+LOG_INVALID = 255
+
 MESSAGES = {
     WATCHDOG_INIT: "Watchdog initialized",
     I2C_INIT: "I2C bus initialized",
@@ -50,6 +52,8 @@ MESSAGES = {
     ACT_UNKNOWN: "Unknown action",
     #
     MENU: "Entering menu:",
+    #
+    LOG_INVALID: "Invalid entry"
 }
 
 

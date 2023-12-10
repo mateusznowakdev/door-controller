@@ -73,9 +73,9 @@ class Logger:
         print(f"debug get #{log_id} from {address}")
         raw = eeprom[address : address + self.FRAME_SIZE]
         if not verify_checksum(raw):
-            return LogEntry(255, 0, 0, 0)
+            return LogEntry(255, logging.MESSAGES[255], 0, 0, 0)
 
-        return LogEntry(raw[0], raw[1], raw[2], raw[3])
+        return LogEntry(raw[0], logging.MESSAGES[raw[0]], raw[1], raw[2], raw[3])
 
     def log(self, message_id: int, *args: str) -> None:
         args = list(args) + [f"(log to {self.address})"]

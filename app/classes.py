@@ -2,7 +2,7 @@ from collections import namedtuple
 
 LogEntry = namedtuple(
     "LogEntry",
-    ("log_id", "hour", "minute", "second"),
+    ("id", "message", "hour", "minute", "second"),
 )
 
 _Settings = namedtuple(

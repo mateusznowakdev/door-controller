@@ -388,11 +388,12 @@ class HistoryMenu(Menu):
         return -49, 0
 
     def render(self) -> None:
-        x = logger.get(-self.pos)
+        log = logger.get(-self.pos)
 
         display.clear()
-        display.write((2, 0), f"#{-self.pos + 1} LogID={x.log_id}".encode())
-        display.write((2, 1), format_time(x.hour, x.minute, x.second))
+        display.write((2, 0), f"#{-self.pos + 1}".encode())
+        display.write((6, 0), format_time(log.hour, log.minute, log.second))
+        display.write((2, 1), log.message[:12].encode())
 
         lo, hi = self.get_min_max_cursors()
         if self.pos > lo:
