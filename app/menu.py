@@ -326,17 +326,18 @@ class MotorPreviewMenu(Menu):
 
     def render(self) -> None:
         display.clear()
-        display.write((4, 0), b"--:--:--")
+        display.write((8, 0), b"--:--:--")
 
         lo, hi = self.get_min_max_cursors()
+        display.write((1, 1), f"{self.pos + 1:02}/{hi + 1:02}".encode())
         if self.pos > lo:
             display.write((0, 1), b"\x7F")
         if self.pos < hi:
-            display.write((15, 1), b"\x7E")
+            display.write((6, 1), b"\x7E")
 
         try:
-            display.write((4, 0), self.data[self.pos][0])
-            display.write((4, 1), self.data[self.pos][1])
+            display.write((8, 0), self.data[self.pos][0])
+            display.write((8, 1), self.data[self.pos][1])
         except IndexError:
             pass
 
@@ -394,22 +395,28 @@ class SystemMenu(Menu):
 
 
 class HistoryMenu(Menu):
+    MAX_VALUE = 49
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.pos = self.MAX_VALUE
+
     def get_min_max_cursors(self) -> tuple[int, int]:
-        return -49, 0
+        return 0, self.MAX_VALUE
 
     def render(self) -> None:
-        log = logger.get(-self.pos)
+        log = logger.get(self.MAX_VALUE - self.pos)
 
         display.clear()
-        display.write((2, 0), f"#{-self.pos + 1}".encode())
-        display.write((6, 0), format_time(log.hour, log.minute, log.second))
-        display.write((2, 1), log.message[:12].encode())
+        display.write((8, 1), format_time(log.hour, log.minute, log.second))
+        display.write((0, 0), log.message[:12].encode())
 
         lo, hi = self.get_min_max_cursors()
+        display.write((1, 1), f"{self.pos + 1:02}/{hi + 1:02}".encode())
         if self.pos > lo:
             display.write((0, 1), b"\x7F")
         if self.pos < hi:
-            display.write((15, 1), b"\x7E")
+            display.write((6, 1), b"\x7E")
 
         display.flush()
 
