@@ -1,9 +1,9 @@
 import asyncio
-import os
 import time
 
 from app import const
 from app.common import SettingsGroup, chunk, clamp, format_time, get_time_offsets, log
+from app.const import _
 from app.core import (
     Display,
     Keys,
@@ -17,25 +17,6 @@ from app.core import (
     settings,
     wdt,
 )
-
-TRANSLATIONS = {
-    "pl": {
-        b"Set the clock": b"Ustaw zegar",
-        b"Open": b"Otworz",
-        b"Close": b"Zamknij",
-        b"Set up opening": b"Ust. otwierania",
-        b"Set up closing": b"Ust. zamykania",
-        b"Set system time": b"Ust. czasu sys.",
-        b"History": b"Historia",
-        b"Return": b"Powrot",
-    }
-}
-
-LANG = os.getenv("LANG")
-
-
-def _(orig: bytes) -> bytes:
-    return TRANSLATIONS.get(LANG, {}).get(orig, orig)
 
 
 class MenuExit(Exception):
@@ -158,8 +139,8 @@ class IdleMenu(Menu):
 
         display.clear()
         display.write((0, 0), format_time(now.tm_hour, now.tm_min, now.tm_sec))
-        display.write((11, 0), _(b"\x05!") if not wdt.enabled else b"")
-        display.write((14, 0), _(b"\x04!") if rtc.lost_power else b"")
+        display.write((11, 0), b"\x05!" if not wdt.enabled else b"")
+        display.write((14, 0), b"\x04!" if rtc.lost_power else b"")
         display.flush()
 
     async def loop_navi(self) -> None:
@@ -191,25 +172,25 @@ class MainMenu(Menu):
     )
 
     LABELS = (
-        _(b"Open"),
-        _(b"Close"),
-        _(b"Set up opening"),
-        _(b"Set up closing"),
-        _(b"Set system time"),
-        _(b"History"),
-        _(b"Return"),
+        _(const.MENU_OPEN),
+        _(const.MENU_CLOSE),
+        _(const.MENU_SET_OPEN),
+        _(const.MENU_SET_CLOSE),
+        _(const.MENU_SET_TIME),
+        _(const.MENU_HISTORY),
+        _(const.MENU_RETURN),
     )
 
     ID_OPEN = 0
     ID_CLOSE = 1
     ID_SET_OPEN = 2
     ID_SET_CLOSE = 3
-    ID_SET_SYS = 4
+    ID_SET_TIME = 4
     ID_HISTORY = 5
     ID_RETURN = 6
 
     def get_label(self) -> bytes:
-        return self.LABELS[self.pos]
+        return self.LABELS[self.pos].encode()
 
     def enter(self) -> None:
         super().enter()
@@ -231,7 +212,7 @@ class MainMenu(Menu):
             await self._enter_submenu(MotorMenu(Motor.ACT_OPEN))
         elif self.pos == self.ID_SET_CLOSE:
             await self._enter_submenu(MotorMenu(Motor.ACT_CLOSE))
-        elif self.pos == self.ID_SET_SYS:
+        elif self.pos == self.ID_SET_TIME:
             await self._enter_submenu(SystemMenu())
         elif self.pos == self.ID_HISTORY:
             await self._enter_submenu(HistoryMenu())

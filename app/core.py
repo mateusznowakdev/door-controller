@@ -23,6 +23,7 @@ from app.common import (
     log,
     verify_checksum,
 )
+from app.const import _
 
 
 class WatchDog:
@@ -67,19 +68,19 @@ class Logger:
 
     def get(self, log_id: int) -> LogEntry:
         address = self.address
-        for _ in range(log_id + 1):
+        for __ in range(log_id + 1):
             address -= self.FRAME_SIZE
             if address < self.START_ADDRESS:
                 address = self.END_ADDRESS - self.FRAME_SIZE
 
         raw = eeprom[address : address + self.FRAME_SIZE]
         if not verify_checksum(raw):
-            return LogEntry(255, const.MESSAGES[255], 0, 0, 0)
+            return LogEntry(255, _(255), 0, 0, 0)
 
-        return LogEntry(raw[0], const.MESSAGES[raw[0]], raw[1], raw[2], raw[3])
+        return LogEntry(raw[0], _(raw[0]), raw[1], raw[2], raw[3])
 
     def log(self, message_id: int) -> None:
-        log(const.MESSAGES[message_id])
+        log(_(message_id))
 
         now = time.localtime()
 
