@@ -2,6 +2,6 @@ import asyncio
 
 
 async def main() -> None:
-    from app import menu, scheduler  # pylint:disable=import-outside-toplevel
+    from app import core, menu  # pylint:disable=import-outside-toplevel
 
-    await asyncio.gather(menu.loop(), scheduler.loop())
+    await asyncio.gather(core.loop(), menu.loop())

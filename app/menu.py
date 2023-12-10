@@ -2,10 +2,20 @@ import asyncio
 import os
 import time
 
-from app import logging, scheduler, settings
-from app.classes import Settings
-from app.hardware import Display, Keys, Motor, display, keys, logger, motor, rtc
-from app.utils import chunk, clamp, format_time, get_time_offset_strings
+from app import logging
+from app.common import SettingsGroup, chunk, clamp, format_time, get_time_offset_strings
+from app.core import (
+    Display,
+    Keys,
+    Motor,
+    display,
+    keys,
+    logger,
+    motor,
+    rtc,
+    scheduler,
+    settings,
+)
 
 TRANSLATIONS = {
     "pl": {
@@ -292,7 +302,7 @@ class MotorMenu(Menu):
 
     async def loop_navi_enter(self, duration: float) -> None:
         if self.pos == self.ID_PREVIEW:
-            await self._enter_submenu(MotorPreviewMenu(Settings(*self.data)))
+            await self._enter_submenu(MotorPreviewMenu(SettingsGroup(*self.data)))
         elif self.pos == self.ID_RETURN:
             raise MenuExit()
         else:
@@ -302,12 +312,12 @@ class MotorMenu(Menu):
         super().exit()
 
         if tuple(self.initial) != tuple(self.data):
-            settings.save(self.name, Settings(*self.data))
+            settings.save(self.name, SettingsGroup(*self.data))
             scheduler.restart()
 
 
 class MotorPreviewMenu(Menu):
-    def __init__(self, data: Settings) -> None:
+    def __init__(self, data: SettingsGroup) -> None:
         super().__init__()
         self.data = chunk(get_time_offset_strings(data), 2)
 

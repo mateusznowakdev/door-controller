@@ -1,6 +1,5 @@
 import math
-
-from app.classes import Settings
+from collections import namedtuple
 
 BASE_CHECKSUM = 42
 
@@ -8,6 +7,25 @@ SECOND = 1
 MINUTE = 60 * SECOND
 HOUR = 60 * MINUTE
 DAY = 24 * HOUR
+
+LogEntry = namedtuple(
+    "LogEntry",
+    ("id", "message", "hour", "minute", "second"),
+)
+_SettingsGroup = namedtuple(
+    "_SettingsGroup",
+    ("first_hr", "first_min", "last_hr", "last_min", "duration", "divided_by"),
+)
+Task = namedtuple(
+    "Task",
+    ("timestamp", "function"),
+)
+
+
+class SettingsGroup(_SettingsGroup):
+    @property
+    def duration_single(self) -> float:
+        return self.duration / self.divided_by
 
 
 def chunk(items: list, size: int) -> list[tuple]:
@@ -35,7 +53,7 @@ def get_checksum(data: list[int]) -> int:
     return result
 
 
-def get_time_offsets(settings: Settings) -> list[int]:
+def get_time_offsets(settings: SettingsGroup) -> list[int]:
     first_sec = settings.first_hr * HOUR + settings.first_min * MINUTE
     last_sec = settings.last_hr * HOUR + settings.last_min * MINUTE
 
@@ -58,7 +76,7 @@ def get_time_offsets(settings: Settings) -> list[int]:
     return offsets
 
 
-def get_time_offset_strings(settings: Settings) -> list[bytes]:
+def get_time_offset_strings(settings: SettingsGroup) -> list[bytes]:
     strings = []
 
     for value in get_time_offsets(settings):

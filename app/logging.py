@@ -8,14 +8,15 @@ LOGGER_INIT = 4
 MOTOR_INIT = 5
 DISPLAY_INIT = 6
 KEYPAD_INIT = 7
-SCHEDULER_INIT = 8
 
 SETTINGS_LOAD_ERR = 16
 SETTINGS_SAVE = 17
 RTC_SAVE = 18
 
-SCHEDULER_ERR = 32
-SCHEDULER_ACT = 33
+SCHEDULER_INIT = 32
+SCHEDULER_RST = 33
+SCHEDULER_ERR = 34
+SCHEDULER_ACT = 35
 
 ACT_OPEN_START = 48
 ACT_OPEN_STOP = 49
@@ -36,12 +37,13 @@ MESSAGES = {
     MOTOR_INIT: "Motor initialized",
     DISPLAY_INIT: "Display initialized",
     KEYPAD_INIT: "Keypad initialized",
-    SCHEDULER_INIT: "Scheduler initialized",
     #
     SETTINGS_LOAD_ERR: "Invalid settings, using defaults",
     SETTINGS_SAVE: "Settings updated",
     RTC_SAVE: "RTC time changed",
     #
+    SCHEDULER_INIT: "Scheduler initialized",
+    SCHEDULER_RST: "Scheduler restarted",
     SCHEDULER_ERR: "Could not initialize the scheduler",
     SCHEDULER_ACT: "Scheduled task is executed",
     #
@@ -53,7 +55,7 @@ MESSAGES = {
     #
     MENU: "Entering menu:",
     #
-    LOG_INVALID: "Invalid entry"
+    LOG_INVALID: "Invalid entry",
 }
 
 

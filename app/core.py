@@ -1,3 +1,4 @@
+import asyncio
 import board
 import keypad
 import rtc as _rtc
@@ -13,8 +14,16 @@ from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 from adafruit_ds3231 import DS3231
 
 from app import logging
-from app.classes import LogEntry
-from app.utils import get_checksum, verify_checksum
+from app.common import (
+    DAY,
+    SECOND,
+    LogEntry,
+    SettingsGroup,
+    Task,
+    get_checksum,
+    get_time_offsets,
+    verify_checksum,
+)
 
 
 class WatchDog:
@@ -50,17 +59,12 @@ class Logger:
         self.address = self.START_ADDRESS
 
         raw = eeprom[self.START_ADDRESS : self.END_ADDRESS]
-        print(f"debug raw {raw}")
-        print(f"\\xff in raw: {len([x for x in raw if x == 255])}")
 
         for address in range(self.START_ADDRESS, self.END_ADDRESS, self.FRAME_SIZE):
             start = address - self.START_ADDRESS
             if raw[start : start + self.FRAME_SIZE] == self.END_FRAME:
-                print(f"debug found {address}")
                 self.address = address
                 break
-        else:
-            print("debug not found")
 
     def get(self, log_id: int) -> LogEntry:
         address = self.address
@@ -69,8 +73,6 @@ class Logger:
             if address < self.START_ADDRESS:
                 address = self.END_ADDRESS - self.FRAME_SIZE
 
-        print(f"current {self.address}")
-        print(f"debug get #{log_id} from {address}")
         raw = eeprom[address : address + self.FRAME_SIZE]
         if not verify_checksum(raw):
             return LogEntry(255, logging.MESSAGES[255], 0, 0, 0)
@@ -88,17 +90,14 @@ class Logger:
 
         a = self.address
         b = a + self.FRAME_SIZE
-        print(f"debug writing {a}:{b} -> {raw}")
         eeprom[a:b] = bytearray(raw)
 
         self.address += self.FRAME_SIZE
         if self.address == self.END_ADDRESS:
-            print("overlap")
             self.address = self.START_ADDRESS
 
         a = self.address
         b = a + self.FRAME_SIZE
-        print(f"debug writing {a}:{b} -> {list(self.END_FRAME)}")
         eeprom[a:b] = self.END_FRAME
 
 
@@ -285,6 +284,97 @@ class Keys:
         return self._key_number, 0.0
 
 
+class Settings:
+    DEFAULTS = SettingsGroup(0, 0, 0, 0, 0, 1)
+
+    def load(self, action_id: int) -> SettingsGroup:
+        raw = eeprom[action_id : action_id + 8]
+
+        if not verify_checksum(raw):
+            logger.log(logging.SETTINGS_LOAD_ERR)
+            return self.DEFAULTS
+
+        return SettingsGroup(
+            raw[0], raw[1], raw[2], raw[3], raw[4] + raw[5] * 256, raw[6]
+        )
+
+    def save(self, action_id: int, obj: SettingsGroup) -> None:
+        raw = [obj[0], obj[1], obj[2], obj[3], obj[4] % 256, obj[4] // 256, obj[5]]
+        raw.append(get_checksum(raw))
+
+        eeprom[action_id : action_id + 8] = bytearray(raw)
+
+        logger.log(logging.SETTINGS_SAVE)
+
+    def reset(self) -> None:
+        self.save(Motor.ACT_OPEN, self.DEFAULTS)
+        self.save(Motor.ACT_CLOSE, self.DEFAULTS)
+
+
+class Scheduler:
+    def __init__(self) -> None:
+        self.tasks = self.get_tasks()
+        logger.log(logging.SCHEDULER_INIT)
+
+    def restart(self) -> None:
+        self.tasks = self.get_tasks()
+        logger.log(logging.SCHEDULER_RST)
+
+    def get_tasks(self) -> list[Task]:
+        if rtc.lost_power:
+            logger.log(logging.SCHEDULER_ERR)
+            return []
+
+        opening_tasks = self.get_tasks_for_action(Motor.ACT_OPEN)
+        closing_tasks = self.get_tasks_for_action(Motor.ACT_CLOSE)
+
+        return opening_tasks + closing_tasks
+
+    def get_tasks_for_action(self, action_id: int) -> list[Task]:
+        tasks = []
+
+        now = time.localtime()
+        now_ts = time.mktime(now)
+
+        midnight_ts = time.mktime(
+            (now.tm_year, now.tm_mon, now.tm_mday, 0, 0, 0, 0, 0, -1)
+        )
+
+        motor_settings = settings.load(action_id)
+        offsets = get_time_offsets(motor_settings)
+
+        for offset in offsets:
+            # add extra 5s delay before any task can be run
+            ts = midnight_ts + offset
+            while ts < now_ts + 5 * SECOND:
+                ts += DAY
+
+            task = Task(
+                ts,
+                lambda: motor.run(action_id, motor_settings.duration_single),
+            )
+            tasks.append(task)
+
+        return tasks
+
+    async def loop(self) -> None:
+        wdt.feed()
+        await asyncio.sleep(WatchDog.TIMEOUT / 2)
+
+        now = time.time()
+
+        for idx, task in enumerate(self.tasks):
+            if now < task.timestamp:
+                continue
+
+            logger.log(logging.SCHEDULER_ACT)
+            task.function()
+            self.tasks[idx] = Task(task.timestamp + DAY, task.function)
+
+            # skip processing other operations for now
+            return
+
+
 wdt = WatchDog()
 wdt.feed()
 
@@ -309,3 +399,11 @@ logger.log(logging.DISPLAY_INIT)
 
 keys = Keys()
 logger.log(logging.KEYPAD_INIT)
+
+settings = Settings()
+scheduler = Scheduler()
+
+
+async def loop() -> None:
+    while True:
+        await scheduler.loop()
