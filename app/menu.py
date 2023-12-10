@@ -2,9 +2,8 @@ import asyncio
 import time
 
 from app import const
-from app.const import _
 from app.core import display, keys, logger, motor, rtc, scheduler, settings, wdt
-from app.shared import chunk, clamp, format_time, get_time_offsets, log
+from app.shared import _, chunk, clamp, format_time, get_time_offsets, log
 from app.types import SettingsT
 
 

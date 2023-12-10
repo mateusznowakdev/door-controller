@@ -14,8 +14,7 @@ from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 from adafruit_ds3231 import DS3231
 
 from app import const
-from app.const import _
-from app.shared import get_checksum, get_time_offsets, log, verify_checksum
+from app.shared import _, get_checksum, get_time_offsets, log, verify_checksum
 from app.types import LogT, SettingsT, TaskT
 
 

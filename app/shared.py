@@ -7,6 +7,10 @@ from app.types import SettingsT
 BASE_CHECKSUM = 42
 
 
+def _(text_id: int) -> str:
+    return const.TRANSLATIONS.get(const.LANG, {}).get(text_id, f"{text_id}?")
+
+
 def chunk(items: list, size: int) -> list[tuple]:
     chunk_count = math.ceil(len(items) / size)
     return [items[x * size : (x + 1) * size] for x in range(chunk_count)]

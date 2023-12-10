@@ -76,7 +76,3 @@ TRANSLATIONS = {
 }
 
 LANG = os.getenv("LANG", "en")
-
-
-def _(text_id: int) -> str:
-    return TRANSLATIONS.get(LANG, {}).get(text_id, f"{text_id}?")
