@@ -3,7 +3,14 @@ import os
 import time
 
 from app import const
-from app.common import SettingsGroup, chunk, clamp, format_time, get_time_offset_strings
+from app.common import (
+    SettingsGroup,
+    chunk,
+    clamp,
+    format_time,
+    get_time_offset_strings,
+    log,
+)
 from app.core import (
     Display,
     Keys,
@@ -66,7 +73,7 @@ class Menu:
         display.flush()
 
     def enter(self) -> None:
-        logger.log(const.MENU, self.__class__.__name__)
+        log(f"Switching to {self.__class__.__name__}")
         self.render()
 
     async def loop(self) -> None:
@@ -403,11 +410,11 @@ class HistoryMenu(Menu):
         return 0, self.MAX_VALUE
 
     def render(self) -> None:
-        log = logger.get(self.MAX_VALUE - self.pos)
+        entry = logger.get(self.MAX_VALUE - self.pos)
 
         display.clear()
-        display.write((8, 1), format_time(log.hour, log.minute, log.second))
-        display.write((0, 0), log.message[:16].encode())
+        display.write((8, 1), format_time(entry.hour, entry.minute, entry.second))
+        display.write((0, 0), entry.message[:16].encode())
 
         lo, hi = self.get_min_max_cursors()
         display.write((0, 1), b"\x7F" if self.pos > lo else b" ")

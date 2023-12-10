@@ -85,8 +85,8 @@ def get_time_offset_strings(settings: SettingsGroup) -> list[bytes]:
     return strings
 
 
-def log(message_id: int, *args: str) -> None:
-    print(f"[{time.monotonic():10.2f}] {const.MESSAGES[message_id]} {' '.join(args)}")
+def log(message: str) -> None:
+    print(f"[{time.monotonic():10.2f}] {message}")
 
 
 def verify_checksum(data: list[int]) -> bool:

@@ -4,13 +4,6 @@ HOUR = 60 * MINUTE
 DAY = 24 * HOUR
 
 BOARD_INIT = 0
-WATCHDOG_INIT = 1
-I2C_INIT = 2
-RTC_INIT = 3
-EEPROM_INIT = 4
-MOTOR_INIT = 5
-DISPLAY_INIT = 6
-KEYPAD_INIT = 7
 
 SETTINGS_LOAD_ERR = 16
 SETTINGS_SAVE = 17
@@ -25,21 +18,11 @@ ACT_OPEN_START = 48
 ACT_OPEN_STOP = 49
 ACT_CLOSE_START = 50
 ACT_CLOSE_STOP = 51
-ACT_UNKNOWN = 52
-
-MENU = 64
 
 LOG_INVALID = 255
 
 MESSAGES = {
     BOARD_INIT: "Board initialized",
-    WATCHDOG_INIT: "Watchdog initialized",
-    I2C_INIT: "I2C bus initialized",
-    RTC_INIT: "RTC initialized",
-    EEPROM_INIT: "EEPROM initialized",
-    MOTOR_INIT: "Motor initialized",
-    DISPLAY_INIT: "Display initialized",
-    KEYPAD_INIT: "Keypad initialized",
     #
     SETTINGS_LOAD_ERR: "Invalid settings, using defaults",
     SETTINGS_SAVE: "Settings updated",
@@ -54,9 +37,6 @@ MESSAGES = {
     ACT_OPEN_STOP: "Opening stopped",
     ACT_CLOSE_START: "Closing started",
     ACT_CLOSE_STOP: "Closing stopped",
-    ACT_UNKNOWN: "Unknown action",
-    #
-    MENU: "Entering menu:",
     #
     LOG_INVALID: "Invalid entry",
 }

@@ -40,7 +40,7 @@ class WatchDog:
             watchdog.mode = WatchDogMode.RESET
             self.enabled = True
 
-            log(const.WATCHDOG_INIT)
+            log("Watchdog initialized")
 
         if self.enabled:
             watchdog.feed()
@@ -78,9 +78,8 @@ class Logger:
 
         return LogEntry(raw[0], const.MESSAGES[raw[0]], raw[1], raw[2], raw[3])
 
-    def log(self, message_id: int, *args: str) -> None:
-        args = list(args) + [f"(log to byte #{self.address})"]
-        log(message_id, *args)
+    def log(self, message_id: int) -> None:
+        log(const.MESSAGES[message_id])
 
         now = time.localtime()
 
@@ -128,7 +127,7 @@ class Motor:
         elif action_id == Motor.ACT_CLOSE:
             self.close(duration)
         else:
-            logger.log(const.ACT_UNKNOWN)
+            raise ValueError("Unknown action ID")
 
     def open(self, duration: float) -> None:
         logger.log(const.ACT_OPEN_START)
@@ -378,26 +377,26 @@ wdt = WatchDog()
 wdt.feed()
 
 i2c = I2C(scl=board.GP11, sda=board.GP10)
-log(const.I2C_INIT)
+log("I2C initialized")
 
 rtc = DS3231(i2c)
 _rtc.set_time_source(rtc)
-log(const.RTC_INIT)
+log("RTC initialized")
 
 eeprom = EEPROM_I2C(i2c, 0x57)
-log(const.EEPROM_INIT)
+log("EEPROM initialized")
+
+motor = Motor()
+log("Motor initialized")
+
+display = Display()
+log("Display initialized")
+
+keys = Keys()
+log("Keys initialized")
 
 logger = Logger()
 logger.log(const.BOARD_INIT)
-
-motor = Motor()
-logger.log(const.MOTOR_INIT)
-
-display = Display()
-logger.log(const.DISPLAY_INIT)
-
-keys = Keys()
-logger.log(const.KEYPAD_INIT)
 
 settings = Settings()
 scheduler = Scheduler()
