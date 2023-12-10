@@ -4,19 +4,7 @@ import time
 from app import const
 from app.common import SettingsGroup, chunk, clamp, format_time, get_time_offsets, log
 from app.const import _
-from app.core import (
-    Display,
-    Keys,
-    Motor,
-    display,
-    keys,
-    logger,
-    motor,
-    rtc,
-    scheduler,
-    settings,
-    wdt,
-)
+from app.core import display, keys, logger, motor, rtc, scheduler, settings, wdt
 
 
 class MenuExit(Exception):
@@ -60,11 +48,11 @@ class Menu:
         await asyncio.sleep(0.05)
 
         key, duration = keys.get()
-        if key == Keys.LEFT:
+        if key == keys.LEFT:
             await self.loop_navi_left(duration)
-        elif key == Keys.RIGHT:
+        elif key == keys.RIGHT:
             await self.loop_navi_right(duration)
-        elif key == Keys.ENTER:
+        elif key == keys.ENTER:
             await self.loop_navi_enter(duration)
 
         if key is not None:
@@ -88,11 +76,11 @@ class Menu:
         await asyncio.sleep(0.05)
 
         key, duration = keys.get()
-        if key == Keys.LEFT:
+        if key == keys.LEFT:
             self.loop_edit_left(duration)
-        elif key == Keys.RIGHT:
+        elif key == keys.RIGHT:
             self.loop_edit_right(duration)
-        elif key == Keys.ENTER:
+        elif key == keys.ENTER:
             self.loop_edit_enter(duration)
 
         if key is not None:
@@ -123,13 +111,13 @@ class Menu:
             self.enter()
 
     def _enter_edit_mode(self) -> None:
-        display.set_backlight(Display.BACKLIGHT_HIGH)
+        display.set_backlight(display.BACKLIGHT_HIGH)
         display.set_alternate_cursor()
         self.edit = True
 
     def _leave_edit_mode(self) -> None:
         self.edit = False
-        display.set_backlight(Display.BACKLIGHT_LOW)
+        display.set_backlight(display.BACKLIGHT_LOW)
         display.set_default_cursor()
 
 
@@ -194,7 +182,7 @@ class MainMenu(Menu):
 
     def enter(self) -> None:
         super().enter()
-        display.set_backlight(Display.BACKLIGHT_LOW)
+        display.set_backlight(display.BACKLIGHT_LOW)
 
     def render(self) -> None:
         ca, cb = self.get_cursor()
@@ -209,9 +197,9 @@ class MainMenu(Menu):
 
     async def loop_navi_enter(self, duration: float) -> None:
         if self.pos == self.ID_SET_OPEN:
-            await self._enter_submenu(MotorMenu(Motor.ACT_OPEN))
+            await self._enter_submenu(MotorMenu(motor.ACT_OPEN))
         elif self.pos == self.ID_SET_CLOSE:
-            await self._enter_submenu(MotorMenu(Motor.ACT_CLOSE))
+            await self._enter_submenu(MotorMenu(motor.ACT_CLOSE))
         elif self.pos == self.ID_SET_TIME:
             await self._enter_submenu(SystemMenu())
         elif self.pos == self.ID_HISTORY:
@@ -223,17 +211,17 @@ class MainMenu(Menu):
 
     async def loop_edit(self) -> None:
         if self.pos == self.ID_OPEN:
-            motor.run(Motor.ACT_OPEN, settings.load(Motor.ACT_OPEN).duration_single)
+            motor.run(motor.ACT_OPEN, settings.load(motor.ACT_OPEN).duration_single)
             self._leave_edit_mode()
         elif self.pos == self.ID_CLOSE:
-            motor.run(Motor.ACT_CLOSE, settings.load(Motor.ACT_CLOSE).duration_single)
+            motor.run(motor.ACT_CLOSE, settings.load(motor.ACT_CLOSE).duration_single)
             self._leave_edit_mode()
         else:
             await super().loop_navi()
 
     def exit(self) -> None:
         super().exit()
-        display.set_backlight(Display.BACKLIGHT_OFF)
+        display.set_backlight(display.BACKLIGHT_OFF)
 
 
 class MotorMenu(Menu):

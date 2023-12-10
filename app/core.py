@@ -26,7 +26,7 @@ from app.common import (
 from app.const import _
 
 
-class WatchDog:
+class _WatchDog:
     TIMEOUT = 8.0
 
     def __init__(self) -> None:
@@ -37,7 +37,7 @@ class WatchDog:
 
     def feed(self) -> None:
         if not self.enabled and self.wdt_pin.value is True:
-            watchdog.timeout = WatchDog.TIMEOUT
+            watchdog.timeout = _WatchDog.TIMEOUT
             watchdog.mode = WatchDogMode.RESET
             self.enabled = True
 
@@ -47,7 +47,7 @@ class WatchDog:
             watchdog.feed()
 
 
-class Logger:
+class _Logger:
     START_ADDRESS = 1024
     END_ADDRESS = 1024 + 128
 
@@ -100,7 +100,7 @@ class Logger:
         eeprom[a:b] = self.END_FRAME
 
 
-class Motor:
+class _Motor:
     # Action ID describes the first EEPROM address for its settings
     ACT_OPEN = 0
     ACT_CLOSE = 64
@@ -113,7 +113,7 @@ class Motor:
         self._motor_b.direction = Direction.OUTPUT
 
     def sleep(self, duration: float) -> None:
-        max_loop_duration = WatchDog.TIMEOUT / 2
+        max_loop_duration = _WatchDog.TIMEOUT / 2
 
         while duration > 0:
             wdt.feed()
@@ -123,9 +123,9 @@ class Motor:
         wdt.feed()
 
     def run(self, action_id: int, duration: float) -> None:
-        if action_id == Motor.ACT_OPEN:
+        if action_id == _Motor.ACT_OPEN:
             self.open(duration)
-        elif action_id == Motor.ACT_CLOSE:
+        elif action_id == _Motor.ACT_CLOSE:
             self.close(duration)
         else:
             raise ValueError("Unknown action ID")
@@ -149,7 +149,7 @@ class Motor:
         logger.log(const.ACT_CLOSE_STOP)
 
 
-class Display:
+class _Display:
     WIDTH = 16
     HEIGHT = 2
 
@@ -176,31 +176,31 @@ class Display:
             db5=DigitalInOut(board.GP6),
             db6=DigitalInOut(board.GP5),
             db7=DigitalInOut(board.GP4),
-            columns=Display.WIDTH,
-            lines=Display.HEIGHT,
+            columns=_Display.WIDTH,
+            lines=_Display.HEIGHT,
         )
-        self._display.create_char(0, Display.CHAR_PLAY)
-        self._display.create_char(1, Display.CHAR_REWIND)
-        self._display.create_char(2, Display.CHAR_MENU)
-        self._display.create_char(3, Display.CHAR_CHECK)
-        self._display.create_char(4, Display.CHAR_TIME)
-        self._display.create_char(5, Display.CHAR_BACK)
-        self._display.create_char(6, Display.CHAR_CUR_A0)
-        self._display.create_char(7, Display.CHAR_CUR_A1)
+        self._display.create_char(0, _Display.CHAR_PLAY)
+        self._display.create_char(1, _Display.CHAR_REWIND)
+        self._display.create_char(2, _Display.CHAR_MENU)
+        self._display.create_char(3, _Display.CHAR_CHECK)
+        self._display.create_char(4, _Display.CHAR_TIME)
+        self._display.create_char(5, _Display.CHAR_BACK)
+        self._display.create_char(6, _Display.CHAR_CUR_A0)
+        self._display.create_char(7, _Display.CHAR_CUR_A1)
 
-        self._cur_buffer = bytearray(b" " * Display.WIDTH * Display.HEIGHT)
+        self._cur_buffer = bytearray(b" " * _Display.WIDTH * _Display.HEIGHT)
         self._old_buffer = self._cur_buffer[:]
         self.clear()
 
         self._backlight = PWMOut(board.GP3)
-        self.set_backlight(Display.BACKLIGHT_OFF)
+        self.set_backlight(_Display.BACKLIGHT_OFF)
 
     def clear(self) -> None:
         self._cur_buffer[:] = b" " * len(self._cur_buffer)
 
     def write(self, pos: tuple[int, int], data: bytes) -> None:
         col, row = pos
-        byte_id = row * Display.WIDTH + col
+        byte_id = row * _Display.WIDTH + col
 
         self._cur_buffer[byte_id : byte_id + len(data)] = data
 
@@ -210,9 +210,9 @@ class Display:
 
         lines = []
 
-        for row in range(0, Display.HEIGHT):
-            first_byte_id = row * Display.WIDTH
-            last_byte_id = (row + 1) * Display.WIDTH
+        for row in range(0, _Display.HEIGHT):
+            first_byte_id = row * _Display.WIDTH
+            last_byte_id = (row + 1) * _Display.WIDTH
 
             line = "".join(chr(b) for b in self._cur_buffer[first_byte_id:last_byte_id])
             lines.append(line)
@@ -221,18 +221,18 @@ class Display:
         self._old_buffer = self._cur_buffer[:]
 
     def set_default_cursor(self) -> None:
-        self._display.create_char(6, Display.CHAR_CUR_A0)
-        self._display.create_char(7, Display.CHAR_CUR_A1)
+        self._display.create_char(6, _Display.CHAR_CUR_A0)
+        self._display.create_char(7, _Display.CHAR_CUR_A1)
 
     def set_alternate_cursor(self) -> None:
-        self._display.create_char(6, Display.CHAR_CUR_B0)
-        self._display.create_char(7, Display.CHAR_CUR_B1)
+        self._display.create_char(6, _Display.CHAR_CUR_B0)
+        self._display.create_char(7, _Display.CHAR_CUR_B1)
 
     def set_backlight(self, value: int) -> None:
         self._backlight.duty_cycle = value * 65535 // 100
 
 
-class Keys:
+class _Keys:
     LEFT = 0
     RIGHT = 1
     ENTER = 2
@@ -271,7 +271,7 @@ class Keys:
 
         # supported key is held
         diff = time.monotonic() - self._key_timestamp
-        if self._key_number in Keys.HOLD_KEYS and diff > Keys.HOLD_THRESHOLD:
+        if self._key_number in _Keys.HOLD_KEYS and diff > _Keys.HOLD_THRESHOLD:
             return self._key_number, diff
 
         # key is pressed but it was acknowledged
@@ -283,7 +283,7 @@ class Keys:
         return self._key_number, 0.0
 
 
-class Settings:
+class _Settings:
     DEFAULTS = SettingsGroup(0, 0, 0, 0, 0, 1)
 
     def load(self, action_id: int) -> SettingsGroup:
@@ -306,11 +306,11 @@ class Settings:
         logger.log(const.SETTINGS_SAVE)
 
     def reset(self) -> None:
-        self.save(Motor.ACT_OPEN, self.DEFAULTS)
-        self.save(Motor.ACT_CLOSE, self.DEFAULTS)
+        self.save(_Motor.ACT_OPEN, self.DEFAULTS)
+        self.save(_Motor.ACT_CLOSE, self.DEFAULTS)
 
 
-class Scheduler:
+class _Scheduler:
     def __init__(self) -> None:
         self.tasks = self.get_tasks()
 
@@ -322,8 +322,8 @@ class Scheduler:
             logger.log(const.SCHEDULER_ERR)
             return []
 
-        opening_tasks = self.get_tasks_for_action(Motor.ACT_OPEN)
-        closing_tasks = self.get_tasks_for_action(Motor.ACT_CLOSE)
+        opening_tasks = self.get_tasks_for_action(_Motor.ACT_OPEN)
+        closing_tasks = self.get_tasks_for_action(_Motor.ACT_CLOSE)
 
         logger.log(const.SCHEDULER_INIT)
         return opening_tasks + closing_tasks
@@ -357,7 +357,7 @@ class Scheduler:
 
     async def loop(self) -> None:
         wdt.feed()
-        await asyncio.sleep(WatchDog.TIMEOUT / 2)
+        await asyncio.sleep(_WatchDog.TIMEOUT / 2)
 
         now = time.time()
 
@@ -373,7 +373,7 @@ class Scheduler:
             return
 
 
-wdt = WatchDog()
+wdt = _WatchDog()
 wdt.feed()
 
 i2c = I2C(scl=board.GP11, sda=board.GP10)
@@ -386,20 +386,20 @@ log("RTC initialized")
 eeprom = EEPROM_I2C(i2c, 0x57)
 log("EEPROM initialized")
 
-motor = Motor()
+motor = _Motor()
 log("Motor initialized")
 
-display = Display()
+display = _Display()
 log("Display initialized")
 
-keys = Keys()
+keys = _Keys()
 log("Keys initialized")
 
-logger = Logger()
+logger = _Logger()
 logger.log(const.BOARD_INIT)
 
-settings = Settings()
-scheduler = Scheduler()
+settings = _Settings()
+scheduler = _Scheduler()
 
 
 async def loop() -> None:
