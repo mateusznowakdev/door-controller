@@ -13,7 +13,8 @@ from adafruit_character_lcd.character_lcd import Character_LCD_Mono
 from adafruit_ds3231 import DS3231
 
 from app import logging
-from app.utils import get_checksum
+from app.classes import LogEntry
+from app.utils import get_checksum, verify_checksum
 
 
 class WatchDog:
@@ -61,16 +62,20 @@ class Logger:
         else:
             print("debug not found")
 
-    def get(self, log_id: int) -> bytes:
+    def get(self, log_id: int) -> LogEntry:
         address = self.address
-        for x in range(log_id + 1):
+        for _ in range(log_id + 1):
             address -= self.FRAME_SIZE
             if address < self.START_ADDRESS:
                 address = self.END_ADDRESS - self.FRAME_SIZE
 
         print(f"current {self.address}")
-        print(f"debug get from {address}")
-        return eeprom[address : address + self.FRAME_SIZE]
+        print(f"debug get #{log_id} from {address}")
+        raw = eeprom[address : address + self.FRAME_SIZE]
+        if not verify_checksum(raw):
+            return LogEntry(255, 0, 0, 0)
+
+        return LogEntry(raw[0], raw[1], raw[2], raw[3])
 
     def log(self, message_id: int, *args: str) -> None:
         args = list(args) + [f"(log to {self.address})"]

@@ -384,21 +384,22 @@ class SystemMenu(Menu):
 
 
 class HistoryMenu(Menu):
-    LOG_COUNT = 50
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.pos = self.LOG_COUNT
-
     def get_min_max_cursors(self) -> tuple[int, int]:
-        return 1, self.LOG_COUNT
+        return -49, 0
 
     def render(self) -> None:
-        text = logger.get(self.LOG_COUNT - self.pos)
+        x = logger.get(-self.pos)
+
         display.clear()
-        display.write((2, 0), b"Log")
-        display.write((6, 0), f"{self.LOG_COUNT - self.pos}".encode())
-        display.write((2, 1), text)
+        display.write((2, 0), f"#{-self.pos + 1} LogID={x.log_id}".encode())
+        display.write((2, 1), format_time(x.hour, x.minute, x.second))
+
+        lo, hi = self.get_min_max_cursors()
+        if self.pos > lo:
+            display.write((0, 1), b"\x7F")
+        if self.pos < hi:
+            display.write((15, 1), b"\x7E")
+
         display.flush()
 
     async def loop_navi_enter(self, duration: float) -> None:
