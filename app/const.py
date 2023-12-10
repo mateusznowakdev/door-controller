@@ -3,11 +3,11 @@ MINUTE = 60 * SECOND
 HOUR = 60 * MINUTE
 DAY = 24 * HOUR
 
-WATCHDOG_INIT = 0
-I2C_INIT = 1
-RTC_INIT = 2
-EEPROM_INIT = 3
-LOGGER_INIT = 4
+BOARD_INIT = 0
+WATCHDOG_INIT = 1
+I2C_INIT = 2
+RTC_INIT = 3
+EEPROM_INIT = 4
 MOTOR_INIT = 5
 DISPLAY_INIT = 6
 KEYPAD_INIT = 7
@@ -32,11 +32,11 @@ MENU = 64
 LOG_INVALID = 255
 
 MESSAGES = {
+    BOARD_INIT: "Board initialized",
     WATCHDOG_INIT: "Watchdog initialized",
     I2C_INIT: "I2C bus initialized",
     RTC_INIT: "RTC initialized",
     EEPROM_INIT: "EEPROM initialized",
-    LOGGER_INIT: "Logger initialized",
     MOTOR_INIT: "Motor initialized",
     DISPLAY_INIT: "Display initialized",
     KEYPAD_INIT: "Keypad initialized",

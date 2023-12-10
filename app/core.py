@@ -388,7 +388,7 @@ eeprom = EEPROM_I2C(i2c, 0x57)
 log(const.EEPROM_INIT)
 
 logger = Logger()
-logger.log(const.LOGGER_INIT)
+logger.log(const.BOARD_INIT)
 
 motor = Motor()
 logger.log(const.MOTOR_INIT)
