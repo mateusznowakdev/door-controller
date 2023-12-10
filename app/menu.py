@@ -329,11 +329,9 @@ class MotorPreviewMenu(Menu):
         display.write((8, 0), b"--:--:--")
 
         lo, hi = self.get_min_max_cursors()
+        display.write((0, 1), b"\x7F" if self.pos > lo else b" ")
         display.write((1, 1), f"{self.pos + 1:02}/{hi + 1:02}".encode())
-        if self.pos > lo:
-            display.write((0, 1), b"\x7F")
-        if self.pos < hi:
-            display.write((6, 1), b"\x7E")
+        display.write((6, 1), b"\x7E" if self.pos < hi else b" ")
 
         try:
             display.write((8, 0), self.data[self.pos][0])
@@ -409,14 +407,12 @@ class HistoryMenu(Menu):
 
         display.clear()
         display.write((8, 1), format_time(log.hour, log.minute, log.second))
-        display.write((0, 0), log.message[:12].encode())
+        display.write((0, 0), log.message[:16].encode())
 
         lo, hi = self.get_min_max_cursors()
+        display.write((0, 1), b"\x7F" if self.pos > lo else b" ")
         display.write((1, 1), f"{self.pos + 1:02}/{hi + 1:02}".encode())
-        if self.pos > lo:
-            display.write((0, 1), b"\x7F")
-        if self.pos < hi:
-            display.write((6, 1), b"\x7E")
+        display.write((6, 1), b"\x7E" if self.pos < hi else b" ")
 
         display.flush()
 
