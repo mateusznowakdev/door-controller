@@ -109,8 +109,8 @@ class _Logger:
 
 class _Motor:
     # action ID describes the first EEPROM address for its settings
-    ACT_OPEN = 0
-    ACT_CLOSE = 64
+    ACT_OPEN = 512
+    ACT_CLOSE = 512 + 8
 
     def __init__(self) -> None:
         self._motor_f = DigitalInOut(board.GP18)
@@ -293,26 +293,37 @@ class _Keys:
 class _Settings:
     DEFAULTS = SettingsT(0, 0, 0, 0, 0, 1)
 
+    VERSION = 1
+    HEADER = bytearray((80, 73, 67, VERSION))
+
+    def __init__(self) -> None:
+        # handle first boot
+        if eeprom[0 : len(self.HEADER)] != self.HEADER:
+            eeprom[0 : len(self.HEADER)] = self.HEADER
+            self.reset()
+
     def load(self, action_id: int) -> SettingsT:
         raw = eeprom[action_id : action_id + 8]
 
         if not verify_checksum(raw):
-            logger.log(const.SETTINGS_LOAD_ERR)
+            logger.log(const.SETTINGS_ERR)
             return self.DEFAULTS
 
         return SettingsT(raw[0], raw[1], raw[2], raw[3], raw[4] + raw[5] * 256, raw[6])
 
     def save(self, action_id: int, obj: SettingsT) -> None:
-        raw = [obj[0], obj[1], obj[2], obj[3], obj[4] % 256, obj[4] // 256, obj[5]]
-        raw.append(get_checksum(raw))
-
-        eeprom[action_id : action_id + 8] = bytearray(raw)
-
+        self.save_nolog(action_id, obj)
         logger.log(const.SETTINGS_SAVE)
 
+    def save_nolog(self, action_id: int, obj: SettingsT) -> None:
+        raw = [obj[0], obj[1], obj[2], obj[3], obj[4] % 256, obj[4] // 256, obj[5]]
+        raw.append(get_checksum(raw))
+        eeprom[action_id : action_id + 8] = bytearray(raw)
+
     def reset(self) -> None:
-        self.save(motor.ACT_OPEN, self.DEFAULTS)
-        self.save(motor.ACT_CLOSE, self.DEFAULTS)
+        self.save_nolog(motor.ACT_OPEN, self.DEFAULTS)
+        self.save_nolog(motor.ACT_CLOSE, self.DEFAULTS)
+        logger.log(const.SETTINGS_RST)
 
 
 class _Scheduler:

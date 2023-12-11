@@ -6,19 +6,17 @@ HOUR = 60 * MINUTE
 DAY = 24 * HOUR
 
 BOARD_INIT = 0
-
-SETTINGS_LOAD_ERR = 16
+RTC_SAVE = 8
+SETTINGS_ERR = 16
 SETTINGS_SAVE = 17
-RTC_SAVE = 18
-
-SCHEDULER_INIT = 32
-SCHEDULER_ERR = 33
-SCHEDULER_ACT = 34
-
-ACT_OPEN_START = 48
-ACT_OPEN_STOP = 49
-ACT_CLOSE_START = 50
-ACT_CLOSE_STOP = 51
+SETTINGS_RST = 18
+SCHEDULER_INIT = 24
+SCHEDULER_ERR = 25
+SCHEDULER_ACT = 26
+ACT_OPEN_START = 32
+ACT_OPEN_STOP = 33
+ACT_CLOSE_START = 34
+ACT_CLOSE_STOP = 35
 
 MENU_OPEN = 128
 MENU_CLOSE = 129
@@ -33,9 +31,10 @@ LOG_INVALID = 255
 TRANSLATIONS = {
     "en": {
         BOARD_INIT: "Device start",
-        SETTINGS_LOAD_ERR: "Settings error",
-        SETTINGS_SAVE: "Settings updated",
         RTC_SAVE: "Clock updated",
+        SETTINGS_ERR: "Settings error",
+        SETTINGS_SAVE: "Settings updated",
+        SETTINGS_RST: "Factory settings",
         SCHEDULER_INIT: "Scheduler start",
         SCHEDULER_ERR: "Clock error",
         SCHEDULER_ACT: "Task start",
@@ -54,9 +53,10 @@ TRANSLATIONS = {
     },
     "pl": {
         BOARD_INIT: "Start urzadzenia",
-        SETTINGS_LOAD_ERR: "Blad ustawien",
-        SETTINGS_SAVE: "Zmiana ustawien",
         RTC_SAVE: "Zmiana czasu",
+        SETTINGS_ERR: "Blad ustawien",
+        SETTINGS_SAVE: "Zmiana ustawien",
+        SETTINGS_RST: "Ustaw.fabryczne",
         SCHEDULER_INIT: "Start planisty",
         SCHEDULER_ERR: "Blad zegara",
         SCHEDULER_ACT: "Start zadania",
