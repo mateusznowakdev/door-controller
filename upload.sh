@@ -3,23 +3,23 @@
 set -e
 
 CPY_HOME=/media/$USER/CIRCUITPY
-CPY_VERSION="CircuitPython 8.2.8"
+CPY_VERSION="CircuitPython 8.2.9"
 
 if [ ! -f mpy-cross ]
 then
-  echo "mpy-cross binary must be present in the root directory"
+  echo "mpy-cross binary must be present in the root directory. Exiting."
   exit 1
 fi
 
 if ! ./mpy-cross --version | grep "$CPY_VERSION"
 then
-  echo "mpy-cross binary is not compatible with $CPY_VERSION"
+  echo "mpy-cross binary is not compatible with $CPY_VERSION. Exiting."
   exit 1
 fi
 
 if ! grep "$CPY_VERSION" "$CPY_HOME/boot_out.txt"
 then
-  echo "$CPY_VERSION must be installed"
+  echo "$CPY_VERSION must be installed. Exiting."
   exit 1
 fi
 

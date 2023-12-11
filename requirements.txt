@@ -1,7 +1,7 @@
 # These are the dependencies to be installed using circup
-# Versions from 2023-11-29 bundle(s)
+# Versions from 2023-12-11 bundle(s)
 
-adafruit_24lc32==1.0.11
-adafruit_character_lcd==3.4.9
-adafruit_ds3231==2.4.19
-asyncio==1.2.1
+adafruit_24lc32==1.0.12
+adafruit_character_lcd==3.4.10
+adafruit_ds3231==2.4.20
+asyncio==1.2.2
