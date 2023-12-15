@@ -1,23 +1,20 @@
+from app.const import HOUR, MINUTE, SECOND
 from app.shared import get_time_offsets
 from app.types import SettingsT
-
-S = 1
-M = 60 * S
-H = 60 * M
 
 
 def test_day_schedule():
     expected = [
-        9 * H + 0 * M + 0 * S,
-        9 * H + 56 * M + 40 * S,
-        10 * H + 53 * M + 20 * S,
-        11 * H + 50 * M + 0 * S,
-        12 * H + 46 * M + 40 * S,
-        13 * H + 43 * M + 20 * S,
-        14 * H + 40 * M + 0 * S,
-        15 * H + 36 * M + 40 * S,
-        16 * H + 33 * M + 20 * S,
-        17 * H + 30 * M + 0 * S,
+        9 * HOUR + 0 * MINUTE + 0 * SECOND,
+        9 * HOUR + 56 * MINUTE + 40 * SECOND,
+        10 * HOUR + 53 * MINUTE + 20 * SECOND,
+        11 * HOUR + 50 * MINUTE + 0 * SECOND,
+        12 * HOUR + 46 * MINUTE + 40 * SECOND,
+        13 * HOUR + 43 * MINUTE + 20 * SECOND,
+        14 * HOUR + 40 * MINUTE + 0 * SECOND,
+        15 * HOUR + 36 * MINUTE + 40 * SECOND,
+        16 * HOUR + 33 * MINUTE + 20 * SECOND,
+        17 * HOUR + 30 * MINUTE + 0 * SECOND,
     ]
     actual = get_time_offsets(SettingsT(9, 0, 17, 30, 456, 10))
 
@@ -26,8 +23,8 @@ def test_day_schedule():
 
 def test_day_schedule_split_by_two():
     expected = [
-        9 * H + 0 * M,
-        17 * H + 30 * M,
+        9 * HOUR + 0 * MINUTE,
+        17 * HOUR + 30 * MINUTE,
     ]
     actual = get_time_offsets(SettingsT(9, 0, 17, 30, 456, 2))
 
@@ -36,7 +33,7 @@ def test_day_schedule_split_by_two():
 
 def test_day_schedule_split_by_one():
     expected = [
-        9 * H + 0 * M,
+        9 * HOUR + 0 * MINUTE,
     ]
     actual = get_time_offsets(SettingsT(9, 0, 17, 30, 456, 1))
 
@@ -52,16 +49,16 @@ def test_day_schedule_no_time():
 
 def test_night_schedule():
     expected = [
-        17 * H + 30 * M + 0 * S,
-        19 * H + 13 * M + 20 * S,
-        20 * H + 56 * M + 40 * S,
-        22 * H + 40 * M + 0 * S,
-        0 * H + 23 * M + 20 * S,
-        2 * H + 6 * M + 40 * S,
-        3 * H + 50 * M + 0 * S,
-        5 * H + 33 * M + 20 * S,
-        7 * H + 16 * M + 40 * S,
-        9 * H + 0 * M + 0 * S,
+        17 * HOUR + 30 * MINUTE + 0 * SECOND,
+        19 * HOUR + 13 * MINUTE + 20 * SECOND,
+        20 * HOUR + 56 * MINUTE + 40 * SECOND,
+        22 * HOUR + 40 * MINUTE + 0 * SECOND,
+        0 * HOUR + 23 * MINUTE + 20 * SECOND,
+        2 * HOUR + 6 * MINUTE + 40 * SECOND,
+        3 * HOUR + 50 * MINUTE + 0 * SECOND,
+        5 * HOUR + 33 * MINUTE + 20 * SECOND,
+        7 * HOUR + 16 * MINUTE + 40 * SECOND,
+        9 * HOUR + 0 * MINUTE + 0 * SECOND,
     ]
     actual = get_time_offsets(SettingsT(17, 30, 9, 0, 456, 10))
 

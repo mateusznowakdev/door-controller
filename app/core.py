@@ -15,7 +15,7 @@ from adafruit_ds3231 import DS3231
 
 from app import const
 from app.shared import _, get_checksum, get_time_offsets, log, verify_checksum
-from app.types import LogT, SettingsT, TaskT
+from app.types import HistoryT, SettingsT, TaskT
 
 
 class _WatchDog:
@@ -29,7 +29,7 @@ class _WatchDog:
 
     def feed(self) -> None:
         # watchdog will be enabled as soon as wdt_pin is detected to be HIGH,
-        # and it cannot be disabled before restart
+        # and it cannot be disabled until restart
 
         if not self.enabled and self.wdt_pin.value is True:
             watchdog.timeout = self.TIMEOUT
@@ -66,7 +66,7 @@ class _Logger:
                 self.address = address
                 break
 
-    def get(self, log_id: int) -> LogT:
+    def get(self, log_id: int) -> HistoryT:
         # self.address is the location of the end frame
         # so the #0 is self.address-8
         #        #1 is self.address-16, and so on
@@ -78,9 +78,9 @@ class _Logger:
 
         raw = eeprom[address : address + self.FRAME_SIZE]
         if not verify_checksum(raw):
-            return LogT(255, _(255), 0, 0, 0)
+            return HistoryT(255, _(255), 0, 0, 0)
 
-        return LogT(raw[0], _(raw[0]), raw[1], raw[2], raw[3])
+        return HistoryT(raw[0], _(raw[0]), raw[1], raw[2], raw[3])
 
     def log(self, message_id: int) -> None:
         log(_(message_id))
@@ -94,14 +94,14 @@ class _Logger:
         first = self.address
         last = first + self.FRAME_SIZE
         eeprom[first:last] = bytearray(raw)
+        self.address += self.FRAME_SIZE
 
         # handle wraparound
-        self.address += self.FRAME_SIZE
         if self.address >= self.LAST_BYTE:
             self.address = self.FIRST_BYTE
 
         # write end frame data
-        # the same location will be used for next log write
+        # the same address will be used for next log write
         first = self.address
         last = first + self.FRAME_SIZE
         eeprom[first:last] = self.END_FRAME
@@ -306,7 +306,7 @@ class _Settings:
         raw = eeprom[action_id : action_id + 8]
 
         if not verify_checksum(raw):
-            logger.log(const.SETTINGS_ERR)
+            logger.log(const.SETTINGS_ERROR)
             return self.DEFAULTS
 
         return SettingsT(raw[0], raw[1], raw[2], raw[3], raw[4] + raw[5] * 256, raw[6])
@@ -323,7 +323,7 @@ class _Settings:
     def reset(self) -> None:
         self.save_nolog(motor.ACT_OPEN, self.DEFAULTS)
         self.save_nolog(motor.ACT_CLOSE, self.DEFAULTS)
-        logger.log(const.SETTINGS_RST)
+        logger.log(const.SETTINGS_RESET)
 
 
 class _Scheduler:
@@ -335,7 +335,7 @@ class _Scheduler:
 
     def get_tasks(self) -> list[TaskT]:
         if rtc.lost_power:
-            logger.log(const.SCHEDULER_ERR)
+            logger.log(const.SCHEDULER_ERROR)
             return []
 
         opening_tasks = self.get_tasks_for_action(motor.ACT_OPEN)
@@ -381,7 +381,7 @@ class _Scheduler:
             if now < task.timestamp:
                 continue
 
-            logger.log(const.SCHEDULER_ACT)
+            logger.log(const.SCHEDULER_ACTION)
             task.function()
             self.tasks[idx] = TaskT(task.timestamp + const.DAY, task.function)
 

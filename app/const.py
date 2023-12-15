@@ -7,12 +7,12 @@ DAY = 24 * HOUR
 
 BOARD_INIT = 0
 RTC_SAVE = 8
-SETTINGS_ERR = 16
+SETTINGS_ERROR = 16
 SETTINGS_SAVE = 17
-SETTINGS_RST = 18
+SETTINGS_RESET = 18
 SCHEDULER_INIT = 24
-SCHEDULER_ERR = 25
-SCHEDULER_ACT = 26
+SCHEDULER_ERROR = 25
+SCHEDULER_ACTION = 26
 ACT_OPEN_START = 32
 ACT_OPEN_STOP = 33
 ACT_CLOSE_START = 34
@@ -26,23 +26,23 @@ MENU_SET_TIME = 132
 MENU_HISTORY = 133
 MENU_RETURN = 134
 
-LOG_INVALID = 255
+INVALID = 255
 
 TRANSLATIONS = {
     "en": {
         BOARD_INIT: "Device start",
         RTC_SAVE: "Clock updated",
-        SETTINGS_ERR: "Settings error",
+        SETTINGS_ERROR: "Settings error",
         SETTINGS_SAVE: "Settings updated",
-        SETTINGS_RST: "Factory settings",
+        SETTINGS_RESET: "Factory settings",
         SCHEDULER_INIT: "Scheduler start",
-        SCHEDULER_ERR: "Clock error",
-        SCHEDULER_ACT: "Task start",
+        SCHEDULER_ERROR: "Clock error",
+        SCHEDULER_ACTION: "Task start",
         ACT_OPEN_START: "Opening",
         ACT_OPEN_STOP: "Opened",
         ACT_CLOSE_START: "Closing",
         ACT_CLOSE_STOP: "Closed",
-        LOG_INVALID: "(empty)",
+        INVALID: "(empty)",
         MENU_OPEN: "Open",
         MENU_CLOSE: "Close",
         MENU_SET_OPEN: "Set opening",
@@ -54,17 +54,17 @@ TRANSLATIONS = {
     "pl": {
         BOARD_INIT: "Start urzadzenia",
         RTC_SAVE: "Zmiana czasu",
-        SETTINGS_ERR: "Blad ustawien",
+        SETTINGS_ERROR: "Blad ustawien",
         SETTINGS_SAVE: "Zmiana ustawien",
-        SETTINGS_RST: "Ustaw.fabryczne",
+        SETTINGS_RESET: "Ustaw.fabryczne",
         SCHEDULER_INIT: "Start planisty",
-        SCHEDULER_ERR: "Blad zegara",
-        SCHEDULER_ACT: "Start zadania",
+        SCHEDULER_ERROR: "Blad zegara",
+        SCHEDULER_ACTION: "Start zadania",
         ACT_OPEN_START: "Otwieranie",
         ACT_OPEN_STOP: "Otworzono",
         ACT_CLOSE_START: "Zamykanie",
         ACT_CLOSE_STOP: "Zamknieto",
-        LOG_INVALID: "(pusty)",
+        INVALID: "(pusty)",
         MENU_OPEN: "Otworz",
         MENU_CLOSE: "Zamknij",
         MENU_SET_OPEN: "Ust.otwierania",

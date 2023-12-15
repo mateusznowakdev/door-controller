@@ -4,8 +4,8 @@ _SettingsT = namedtuple(
     "_SettingsT",
     ("first_hr", "first_min", "last_hr", "last_min", "duration", "divided_by"),
 )
-LogT = namedtuple(
-    "LogT",
+HistoryT = namedtuple(
+    "HistoryT",
     ("id", "message", "hour", "minute", "second"),
 )
 TaskT = namedtuple(
