@@ -113,11 +113,21 @@ class _Motor:
     ACT_CLOSE = 512 + 8
 
     def __init__(self) -> None:
-        self._motor_f = DigitalInOut(board.GP18)
-        self._motor_f.direction = Direction.OUTPUT
+        self._ch1 = DigitalInOut(board.GP18)
+        self._ch1.direction = Direction.OUTPUT
+        self._ch1.value = False
 
-        self._motor_b = DigitalInOut(board.GP19)
-        self._motor_b.direction = Direction.OUTPUT
+        self._ch2 = DigitalInOut(board.GP19)
+        self._ch2.direction = Direction.OUTPUT
+        self._ch2.value = False
+
+        self._ch3 = DigitalInOut(board.GP20)
+        self._ch3.direction = Direction.OUTPUT
+        self._ch3.value = False
+
+        self._ch4 = DigitalInOut(board.GP21)
+        self._ch4.direction = Direction.OUTPUT
+        self._ch4.value = False
 
     def sleep(self, duration: float) -> None:
         max_loop_duration = wdt.TIMEOUT / 2
@@ -140,18 +150,22 @@ class _Motor:
     def open(self, duration: float) -> None:
         logger.log(const.ACT_OPEN_START)
 
-        self._motor_f.value = True
+        self._ch1.value = False
+        self._ch2.value = True
         self.sleep(duration)
-        self._motor_f.value = False
+        self._ch1.value = False
+        self._ch2.value = False
 
         logger.log(const.ACT_OPEN_STOP)
 
     def close(self, duration: float) -> None:
         logger.log(const.ACT_CLOSE_START)
 
-        self._motor_b.value = True
+        self._ch3.value = False
+        self._ch4.value = True
         self.sleep(duration)
-        self._motor_b.value = False
+        self._ch3.value = False
+        self._ch4.value = False
 
         logger.log(const.ACT_CLOSE_STOP)
 
