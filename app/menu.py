@@ -15,10 +15,15 @@ class Menu:
     CURSORS = ()
     MIN_MAX_VALUES = ()
 
+    ALT_ICONS = False
+
     def __init__(self) -> None:
         self.data = []
         self.pos = 0
         self.edit = False
+
+        if self.ALT_ICONS:
+            display.set_alternate_icons()
 
     def get_cursor(self) -> tuple[tuple[int, int], tuple[int, int]]:
         return self.CURSORS[self.pos]
@@ -99,7 +104,8 @@ class Menu:
         self._leave_edit_mode()
 
     def exit(self) -> None:
-        pass
+        if self.ALT_ICONS:
+            display.set_default_icons()
 
     async def _enter_submenu(self, instance: "Menu") -> None:
         try:
@@ -242,7 +248,6 @@ class MotorMenu(Menu):
         ((5, 1), (9, 1)),
         ((13, 1), (15, 1)),
     )
-
     MIN_MAX_VALUES = (
         (0, 23),
         (0, 59),
@@ -251,6 +256,8 @@ class MotorMenu(Menu):
         (0, 900),
         (1, 20),
     )
+
+    ALT_ICONS = True
 
     ID_RETURN = 6
 
@@ -266,7 +273,7 @@ class MotorMenu(Menu):
 
         display.clear()
         display.write((0, 0), b"       -      ")
-        display.write((0, 1), b"    s /       \xE8")
+        display.write((0, 1), b"    s /       \x02")
         display.write((1, 0), format_time(self.data[0], self.data[1]))
         display.write((9, 0), format_time(self.data[2], self.data[3]))
         display.write((1, 1), f"{self.data[4]:3}".encode())
@@ -337,11 +344,12 @@ class SystemMenu(Menu):
         ((3, 0), (6, 0)),
         ((13, 1), (15, 1)),
     )
-
     MIN_MAX_VALUES = (
         (0, 23),
         (0, 59),
     )
+
+    ALT_ICONS = True
 
     ID_RETURN = 2
 
@@ -356,7 +364,7 @@ class SystemMenu(Menu):
         ca, cb = self.get_cursor()
 
         display.clear()
-        display.write((0, 1), b"              \xE8")
+        display.write((0, 1), b"              \x02")
         display.write((1, 0), format_time(self.data[0], self.data[1]))
         display.write(ca, b"\x06")
         display.write(cb, b"\x07")

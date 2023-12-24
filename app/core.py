@@ -184,6 +184,7 @@ class _Display:
     CHAR_SET_CLOSE = 0, 0b00011, 0b01101, 0b10000, 0b01011, 0b00011, 0, 0
     CHAR_SET_SYSTEM = 0, 0b00100, 0b00010, 0b10010, 0b01110, 0b00001, 0, 0
     CHAR_TIME = 0, 0b01110, 0b10101, 0b10111, 0b10001, 0b01110, 0, 0
+    CHAR_CHECK = 0, 0b00001, 0b00010, 0b00100, 0b10100, 0b01000, 0, 0
 
     CHAR_CURSOR_L = 0b00101, 0b00000, 0b00100, 0, 0, 0b00100, 0b00000, 0b00101
     CHAR_CURSOR_R = 0b10100, 0b00000, 0b00100, 0, 0, 0b00100, 0b00000, 0b10100
@@ -203,12 +204,11 @@ class _Display:
         )
         self._display.create_char(0, self.CHAR_OPEN)
         self._display.create_char(1, self.CHAR_CLOSE)
-        self._display.create_char(2, self.CHAR_SET_OPEN)
+        self.set_default_icons()
         self._display.create_char(3, self.CHAR_SET_CLOSE)
         self._display.create_char(4, self.CHAR_SET_SYSTEM)
         self._display.create_char(5, self.CHAR_TIME)
-        self._display.create_char(6, self.CHAR_CURSOR_L)
-        self._display.create_char(7, self.CHAR_CURSOR_R)
+        self.set_default_cursor()
 
         self._cur_buffer = bytearray(b" " * self.WIDTH * self.HEIGHT)
         self._old_buffer = self._cur_buffer[:]
@@ -241,6 +241,12 @@ class _Display:
 
         self._display.message = "\n".join(lines)
         self._old_buffer = self._cur_buffer[:]
+
+    def set_default_icons(self) -> None:
+        self._display.create_char(2, self.CHAR_SET_OPEN)
+
+    def set_alternate_icons(self) -> None:
+        self._display.create_char(2, self.CHAR_CHECK)
 
     def set_default_cursor(self) -> None:
         self._display.create_char(6, self.CHAR_CURSOR_L)
