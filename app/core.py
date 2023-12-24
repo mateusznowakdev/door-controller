@@ -379,6 +379,7 @@ class _Scheduler:
                 ts += const.DAY
 
             task = TaskT(
+                action_id,
                 ts,
                 lambda: motor.run(action_id, motor_settings.duration_single),
             )

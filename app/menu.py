@@ -3,7 +3,7 @@ import time
 
 from app import const
 from app.core import display, keys, logger, motor, rtc, scheduler, settings, wdt
-from app.shared import _, chunk, clamp, format_time, get_time_offsets, log
+from app.shared import _, chunk, clamp, format_time, log
 from app.types import SettingsT
 
 
@@ -203,7 +203,7 @@ class MainMenu(Menu):
 
     async def loop_navi_enter(self, duration: float) -> None:
         if self.pos == self.ID_PREVIEW:
-            await self._enter_submenu(PreviewMenu(SettingsT(0, 0, 0, 0, 0, 0)))
+            await self._enter_submenu(PreviewMenu())
         elif self.pos == self.ID_SET_OPEN:
             await self._enter_submenu(MotorMenu(motor.ACT_OPEN))
         elif self.pos == self.ID_SET_CLOSE:
@@ -240,7 +240,6 @@ class MotorMenu(Menu):
         ((11, 0), (14, 0)),
         ((0, 1), (5, 1)),
         ((5, 1), (9, 1)),
-        ((11, 1), (13, 1)),
         ((13, 1), (15, 1)),
     )
 
@@ -253,8 +252,7 @@ class MotorMenu(Menu):
         (1, 20),
     )
 
-    ID_PREVIEW = 6
-    ID_RETURN = 7
+    ID_RETURN = 6
 
     def __init__(self, name: int) -> None:
         super().__init__()
@@ -268,7 +266,7 @@ class MotorMenu(Menu):
 
         display.clear()
         display.write((0, 0), b"       -      ")
-        display.write((0, 1), b"    s /     \xD0 \xE8")
+        display.write((0, 1), b"    s /       \xE8")
         display.write((1, 0), format_time(self.data[0], self.data[1]))
         display.write((9, 0), format_time(self.data[2], self.data[3]))
         display.write((1, 1), f"{self.data[4]:3}".encode())
@@ -278,9 +276,7 @@ class MotorMenu(Menu):
         display.flush()
 
     async def loop_navi_enter(self, duration: float) -> None:
-        if self.pos == self.ID_PREVIEW:
-            await self._enter_submenu(PreviewMenu(SettingsT(*self.data)))
-        elif self.pos == self.ID_RETURN:
+        if self.pos == self.ID_RETURN:
             raise MenuExit()
         else:
             await super().loop_navi_enter(duration)
@@ -294,22 +290,14 @@ class MotorMenu(Menu):
 
 
 class PreviewMenu(Menu):
-    def __init__(self, data: SettingsT) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.data = chunk(self.get_time_offset_strings(data), 2)
+
+        tasks = sorted(scheduler.tasks, key=lambda t: t.timestamp)
+        self.data = chunk(tasks, 2)
 
     def get_min_max_cursors(self) -> tuple[int, int]:
         return 0, len(self.data) - 1
-
-    def get_time_offset_strings(self, data: SettingsT) -> list[bytes]:
-        strings = []
-
-        for value in get_time_offsets(data):
-            hour, minute = divmod(value, const.HOUR)
-            minute, second = divmod(minute, const.MINUTE)
-            strings.append(format_time(hour, minute, second))
-
-        return strings
 
     def render(self) -> None:
         display.clear()
@@ -320,11 +308,14 @@ class PreviewMenu(Menu):
         display.write((1, 1), f"{self.pos + 1:02}/{hi + 1:02}".encode())
         display.write((6, 1), b"\x7E" if self.pos < hi else b" ")
 
-        try:
-            display.write((8, 0), self.data[self.pos][0])
-            display.write((8, 1), self.data[self.pos][1])
-        except IndexError:
-            pass
+        for row in (0, 1):
+            try:
+                task = self.data[self.pos][row]
+            except IndexError:
+                break
+
+            t = time.localtime(task.timestamp)
+            display.write((8, row), format_time(t.tm_hour, t.tm_min, t.tm_sec))
 
         display.flush()
 
