@@ -139,14 +139,6 @@ class _Motor:
 
         wdt.feed()
 
-    def run(self, action_id: int, duration: float) -> None:
-        if action_id == self.ACT_OPEN:
-            self.open(duration)
-        elif action_id == self.ACT_CLOSE:
-            self.close(duration)
-        else:
-            raise ValueError("Unknown action ID")
-
     def open(self, duration: float) -> None:
         logger.log(const.ACT_OPEN_START)
 
@@ -385,11 +377,14 @@ class _Scheduler:
             while ts < now_ts + 5 * const.SECOND:
                 ts += const.DAY
 
-            task = TaskT(
-                action_id,
-                ts,
-                lambda: motor.run(action_id, motor_settings.duration_single),
-            )
+            if action_id == motor.ACT_OPEN:
+                function = lambda: motor.open(motor_settings.duration_single)
+            elif action_id == motor.ACT_CLOSE:
+                function = lambda: motor.close(motor_settings.duration_single)
+            else:
+                function = lambda: ...
+
+            task = TaskT(action_id, ts, function)
             tasks.append(task)
 
         return tasks
