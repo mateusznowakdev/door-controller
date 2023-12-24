@@ -178,16 +178,17 @@ class _Display:
     BACKLIGHT_LOW = 15
     BACKLIGHT_OFF = 1
 
-    CHAR_PLAY = 0b00000, 0b11000, 0b10110, 0b10001, 0b10110, 0b11000, 0b00000, 0b00000
-    CHAR_REWIND = 0b00000, 0b00011, 0b01101, 0b10001, 0b01101, 0b00011, 0b00000, 0b00000
-    CHAR_MENU = 0b00000, 0b01110, 0b00000, 0b01110, 0b00000, 0b01110, 0b00000, 0b00000
-    CHAR_CHECK = 0b00000, 0b00001, 0b00010, 0b00100, 0b10100, 0b01000, 0b00000, 0b00000
-    CHAR_TIME = 0b00000, 0b01110, 0b10101, 0b10111, 0b10001, 0b01110, 0b00000, 0b00000
-    CHAR_BACK = 0b00000, 0b01000, 0b11110, 0b01001, 0b00001, 0b00110, 0b00000, 0b00000
-    CHAR_CUR_A0 = 0b00101, 0b00000, 0b00100, 0b00000, 0b00100, 0b00000, 0b00101, 0b00000
-    CHAR_CUR_A1 = 0b10100, 0b00000, 0b00100, 0b00000, 0b00100, 0b00000, 0b10100, 0b00000
-    CHAR_CUR_B0 = 0b00111, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00111, 0b00000
-    CHAR_CUR_B1 = 0b11100, 0b00100, 0b00100, 0b00100, 0b00100, 0b00100, 0b11100, 0b00000
+    CHAR_OPEN = 0, 0b11000, 0b10110, 0b10001, 0b10110, 0b11000, 0, 0
+    CHAR_CLOSE = 0, 0b00011, 0b01101, 0b10001, 0b01101, 0b00011, 0, 0
+    CHAR_SET_OPEN = 0, 0b11000, 0b10110, 0b00001, 0b11010, 0b11000, 0, 0
+    CHAR_SET_CLOSE = 0, 0b00011, 0b01101, 0b10000, 0b01011, 0b00011, 0, 0
+    CHAR_SET_SYSTEM = 0, 0b00100, 0b00010, 0b10010, 0b01110, 0b00001, 0, 0
+    CHAR_TIME = 0, 0b01110, 0b10101, 0b10111, 0b10001, 0b01110, 0, 0
+
+    CHAR_CURSOR_L = 0b00101, 0b00000, 0b00100, 0, 0, 0b00100, 0b00000, 0b00101
+    CHAR_CURSOR_R = 0b10100, 0b00000, 0b00100, 0, 0, 0b00100, 0b00000, 0b10100
+    CHAR_CURSOR_ALT_L = 0b00111, 0b00100, 0b00100, 0, 0, 0b00100, 0b00100, 0b00111
+    CHAR_CURSOR_ALT_R = 0b11100, 0b00100, 0b00100, 0, 0, 0b00100, 0b00100, 0b11100
 
     def __init__(self) -> None:
         self._display = Character_LCD_Mono(
@@ -200,14 +201,14 @@ class _Display:
             columns=self.WIDTH,
             lines=self.HEIGHT,
         )
-        self._display.create_char(0, self.CHAR_PLAY)
-        self._display.create_char(1, self.CHAR_REWIND)
-        self._display.create_char(2, self.CHAR_MENU)
-        self._display.create_char(3, self.CHAR_CHECK)
-        self._display.create_char(4, self.CHAR_TIME)
-        self._display.create_char(5, self.CHAR_BACK)
-        self._display.create_char(6, self.CHAR_CUR_A0)
-        self._display.create_char(7, self.CHAR_CUR_A1)
+        self._display.create_char(0, self.CHAR_OPEN)
+        self._display.create_char(1, self.CHAR_CLOSE)
+        self._display.create_char(2, self.CHAR_SET_OPEN)
+        self._display.create_char(3, self.CHAR_SET_CLOSE)
+        self._display.create_char(4, self.CHAR_SET_SYSTEM)
+        self._display.create_char(5, self.CHAR_TIME)
+        self._display.create_char(6, self.CHAR_CURSOR_L)
+        self._display.create_char(7, self.CHAR_CURSOR_R)
 
         self._cur_buffer = bytearray(b" " * self.WIDTH * self.HEIGHT)
         self._old_buffer = self._cur_buffer[:]
@@ -242,12 +243,12 @@ class _Display:
         self._old_buffer = self._cur_buffer[:]
 
     def set_default_cursor(self) -> None:
-        self._display.create_char(6, self.CHAR_CUR_A0)
-        self._display.create_char(7, self.CHAR_CUR_A1)
+        self._display.create_char(6, self.CHAR_CURSOR_L)
+        self._display.create_char(7, self.CHAR_CURSOR_R)
 
     def set_alternate_cursor(self) -> None:
-        self._display.create_char(6, self.CHAR_CUR_B0)
-        self._display.create_char(7, self.CHAR_CUR_B1)
+        self._display.create_char(6, self.CHAR_CURSOR_ALT_L)
+        self._display.create_char(7, self.CHAR_CURSOR_ALT_R)
 
     def set_backlight(self, value: int) -> None:
         self._backlight.duty_cycle = value * 65535 // 100

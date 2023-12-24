@@ -127,8 +127,8 @@ class IdleMenu(Menu):
 
         display.clear()
         display.write((0, 0), format_time(now.tm_hour, now.tm_min, now.tm_sec))
-        display.write((11, 0), b"\x05!" if not wdt.enabled else b"")
-        display.write((14, 0), b"\x04!" if rtc.lost_power else b"")
+        display.write((11, 0), b"\x04!" if not wdt.enabled else b"")
+        display.write((14, 0), b"\x05!" if rtc.lost_power else b"")
         display.flush()
 
     async def loop_navi(self) -> None:
@@ -189,7 +189,7 @@ class MainMenu(Menu):
         label = self.get_label()
 
         display.clear()
-        display.write((1, 0), b"\x00 \x01 \x7E \x7F \x04 \x02 \x05")
+        display.write((1, 0), b"\x00 \x01 \x02 \x03 \x04 \xD0 \x7F")
         display.write((1, 1), label)
         display.write(ca, b"\x06")
         display.write(cb, b"\x07")
@@ -260,7 +260,7 @@ class MotorMenu(Menu):
 
         display.clear()
         display.write((0, 0), b"       -      ")
-        display.write((0, 1), b"    s /     \x02 \x03")
+        display.write((0, 1), b"    s /     \xD0 \xE8")
         display.write((1, 0), format_time(self.data[0], self.data[1]))
         display.write((9, 0), format_time(self.data[2], self.data[3]))
         display.write((1, 1), f"{self.data[4]:3}".encode())
@@ -349,7 +349,7 @@ class SystemMenu(Menu):
         ca, cb = self.get_cursor()
 
         display.clear()
-        display.write((0, 1), b"              \x03")
+        display.write((0, 1), b"              \xE8")
         display.write((1, 0), format_time(self.data[0], self.data[1]))
         display.write(ca, b"\x06")
         display.write(cb, b"\x07")
