@@ -18,13 +18,14 @@ ACT_OPEN_STOP = 33
 ACT_CLOSE_START = 34
 ACT_CLOSE_STOP = 35
 
-MENU_OPEN = 128
-MENU_CLOSE = 129
-MENU_SET_OPEN = 130
-MENU_SET_CLOSE = 131
-MENU_SET_TIME = 132
-MENU_HISTORY = 133
-MENU_RETURN = 134
+MENU_PREVIEW = 128
+MENU_OPEN = 129
+MENU_CLOSE = 130
+MENU_SET_OPEN = 131
+MENU_SET_CLOSE = 132
+MENU_SET_TIME = 133
+MENU_HISTORY = 134
+MENU_RETURN = 135
 
 INVALID = 255
 
@@ -43,6 +44,7 @@ TRANSLATIONS = {
         ACT_CLOSE_START: "Closing",
         ACT_CLOSE_STOP: "Closed",
         INVALID: "(empty)",
+        MENU_PREVIEW: "Preview",
         MENU_OPEN: "Open",
         MENU_CLOSE: "Close",
         MENU_SET_OPEN: "Set opening",
@@ -65,6 +67,7 @@ TRANSLATIONS = {
         ACT_CLOSE_START: "Zamykanie",
         ACT_CLOSE_STOP: "Zamknieto",
         INVALID: "(pusty)",
+        MENU_PREVIEW: "Podglad",
         MENU_OPEN: "Otworz",
         MENU_CLOSE: "Zamknij",
         MENU_SET_OPEN: "Ust.otwierania",

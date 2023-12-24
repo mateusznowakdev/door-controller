@@ -157,9 +157,11 @@ class MainMenu(Menu):
         ((8, 0), (10, 0)),
         ((10, 0), (12, 0)),
         ((12, 0), (14, 0)),
+        ((14, 0), (16, 0)),
     )
 
     LABELS = (
+        _(const.MENU_PREVIEW),
         _(const.MENU_OPEN),
         _(const.MENU_CLOSE),
         _(const.MENU_SET_OPEN),
@@ -169,13 +171,14 @@ class MainMenu(Menu):
         _(const.MENU_RETURN),
     )
 
-    ID_OPEN = 0
-    ID_CLOSE = 1
-    ID_SET_OPEN = 2
-    ID_SET_CLOSE = 3
-    ID_SET_TIME = 4
-    ID_HISTORY = 5
-    ID_RETURN = 6
+    ID_PREVIEW = 0
+    ID_OPEN = 1
+    ID_CLOSE = 2
+    ID_SET_OPEN = 3
+    ID_SET_CLOSE = 4
+    ID_SET_TIME = 5
+    ID_HISTORY = 6
+    ID_RETURN = 7
 
     def get_label(self) -> bytes:
         return self.LABELS[self.pos].encode()
@@ -185,18 +188,23 @@ class MainMenu(Menu):
         display.set_backlight(display.BACKLIGHT_LOW)
 
     def render(self) -> None:
-        ca, cb = self.get_cursor()
+        (cax, cay), (cbx, cby) = self.get_cursor()
         label = self.get_label()
 
+        # scroll menu to the left
+        offset = 0 if self.pos < 4 else -1
+
         display.clear()
-        display.write((1, 0), b"\x00 \x01 \x02 \x03 \x04 \xD0 \x7F")
+        display.write((1 + offset, 0), b"\x05 \x00 \x01 \x02 \x03 \x04 \xD0 \x7F")
+        display.write((cax + offset, cay), b"\x06")
+        display.write((cbx + offset, cby), b"\x07")
         display.write((1, 1), label)
-        display.write(ca, b"\x06")
-        display.write(cb, b"\x07")
         display.flush()
 
     async def loop_navi_enter(self, duration: float) -> None:
-        if self.pos == self.ID_SET_OPEN:
+        if self.pos == self.ID_PREVIEW:
+            await self._enter_submenu(PreviewMenu(SettingsT(0, 0, 0, 0, 0, 0)))
+        elif self.pos == self.ID_SET_OPEN:
             await self._enter_submenu(MotorMenu(motor.ACT_OPEN))
         elif self.pos == self.ID_SET_CLOSE:
             await self._enter_submenu(MotorMenu(motor.ACT_CLOSE))
