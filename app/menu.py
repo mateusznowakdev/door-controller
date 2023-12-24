@@ -246,6 +246,7 @@ class MotorMenu(Menu):
         ((11, 0), (14, 0)),
         ((0, 1), (5, 1)),
         ((5, 1), (9, 1)),
+        ((11, 1), (13, 1)),
         ((13, 1), (15, 1)),
     )
     MIN_MAX_VALUES = (
@@ -259,7 +260,8 @@ class MotorMenu(Menu):
 
     ALT_ICONS = True
 
-    ID_RETURN = 6
+    ID_OK = 6
+    ID_CANCEL = 7
 
     def __init__(self, name: int) -> None:
         super().__init__()
@@ -273,7 +275,7 @@ class MotorMenu(Menu):
 
         display.clear()
         display.write((0, 0), b"       -      ")
-        display.write((0, 1), b"    s /       \x02")
+        display.write((0, 1), b"    s /     \x02 \x03")
         display.write((1, 0), format_time(self.data[0], self.data[1]))
         display.write((9, 0), format_time(self.data[2], self.data[3]))
         display.write((1, 1), f"{self.data[4]:3}".encode())
@@ -283,14 +285,15 @@ class MotorMenu(Menu):
         display.flush()
 
     async def loop_navi_enter(self, duration: float) -> None:
-        if self.pos == self.ID_RETURN:
+        if self.pos == self.ID_OK:
+            self.save()
+            raise MenuExit()
+        elif self.pos == self.ID_CANCEL:
             raise MenuExit()
         else:
             await super().loop_navi_enter(duration)
 
-    def exit(self) -> None:
-        super().exit()
-
+    def save(self) -> None:
         if tuple(self.initial) != tuple(self.data):
             settings.save(self.name, SettingsT(*self.data))
             scheduler.restart()
@@ -342,6 +345,7 @@ class SystemMenu(Menu):
     CURSORS = (
         ((0, 0), (3, 0)),
         ((3, 0), (6, 0)),
+        ((11, 1), (13, 1)),
         ((13, 1), (15, 1)),
     )
     MIN_MAX_VALUES = (
@@ -351,7 +355,8 @@ class SystemMenu(Menu):
 
     ALT_ICONS = True
 
-    ID_RETURN = 2
+    ID_OK = 2
+    ID_CANCEL = 3
 
     def __init__(self) -> None:
         super().__init__()
@@ -364,21 +369,22 @@ class SystemMenu(Menu):
         ca, cb = self.get_cursor()
 
         display.clear()
-        display.write((0, 1), b"              \x02")
+        display.write((0, 1), b"            \x02 \x03")
         display.write((1, 0), format_time(self.data[0], self.data[1]))
         display.write(ca, b"\x06")
         display.write(cb, b"\x07")
         display.flush()
 
     async def loop_navi_enter(self, duration: float) -> None:
-        if self.pos == self.ID_RETURN:
+        if self.pos == self.ID_OK:
+            self.save()
+            raise MenuExit()
+        elif self.pos == self.ID_CANCEL:
             raise MenuExit()
 
         await super().loop_navi_enter(duration)
 
-    def exit(self) -> None:
-        super().exit()
-
+    def save(self) -> None:
         if rtc.lost_power or tuple(self.initial) != tuple(self.data):
             h, m = self.data
             rtc.datetime = time.struct_time((2000, 1, 1, h, m, 0, 0, 0, -1))

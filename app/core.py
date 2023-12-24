@@ -184,8 +184,8 @@ class _Display:
     CHAR_SET_CLOSE = 0, 0b00011, 0b01101, 0b10000, 0b01011, 0b00011, 0, 0
     CHAR_SET_SYSTEM = 0, 0b00100, 0b00010, 0b10010, 0b01110, 0b00001, 0, 0
     CHAR_TIME = 0, 0b01110, 0b10101, 0b10111, 0b10001, 0b01110, 0, 0
-    CHAR_CHECK = 0, 0b00001, 0b00010, 0b00100, 0b10100, 0b01000, 0, 0
-
+    CHAR_OK = 0, 0b00001, 0b00010, 0b00100, 0b10100, 0b01000, 0, 0
+    CHAR_CANCEL = 0, 0b10001, 0b01010, 0b00100, 0b01010, 0b10001, 0, 0
     CHAR_CURSOR_L = 0b00101, 0b00000, 0b00100, 0, 0, 0b00100, 0b00000, 0b00101
     CHAR_CURSOR_R = 0b10100, 0b00000, 0b00100, 0, 0, 0b00100, 0b00000, 0b10100
     CHAR_CURSOR_ALT_L = 0b00111, 0b00100, 0b00100, 0, 0, 0b00100, 0b00100, 0b00111
@@ -205,7 +205,6 @@ class _Display:
         self._display.create_char(0, self.CHAR_OPEN)
         self._display.create_char(1, self.CHAR_CLOSE)
         self.set_default_icons()
-        self._display.create_char(3, self.CHAR_SET_CLOSE)
         self._display.create_char(4, self.CHAR_SET_SYSTEM)
         self._display.create_char(5, self.CHAR_TIME)
         self.set_default_cursor()
@@ -244,9 +243,11 @@ class _Display:
 
     def set_default_icons(self) -> None:
         self._display.create_char(2, self.CHAR_SET_OPEN)
+        self._display.create_char(3, self.CHAR_SET_CLOSE)
 
     def set_alternate_icons(self) -> None:
-        self._display.create_char(2, self.CHAR_CHECK)
+        self._display.create_char(2, self.CHAR_OK)
+        self._display.create_char(3, self.CHAR_CANCEL)
 
     def set_default_cursor(self) -> None:
         self._display.create_char(6, self.CHAR_CURSOR_L)
