@@ -301,12 +301,12 @@ class PreviewMenu(Menu):
 
     def render(self) -> None:
         display.clear()
-        display.write((8, 0), b"--:--:--")
+        display.write((5, 0), b"--:--:--")
 
         lo, hi = self.get_min_max_cursors()
         display.write((0, 1), b"\x7F" if self.pos > lo else b" ")
-        display.write((1, 1), f"{self.pos + 1:02}/{hi + 1:02}".encode())
-        display.write((6, 1), b"\x7E" if self.pos < hi else b" ")
+        display.write((1, 1), f"{self.pos + 1:02}".encode())
+        display.write((3, 1), b"\x7E" if self.pos < hi else b" ")
 
         for row in (0, 1):
             try:
@@ -314,8 +314,16 @@ class PreviewMenu(Menu):
             except IndexError:
                 break
 
+            if task.action_id == motor.ACT_OPEN:
+                icon = b"(\x00)"
+            elif task.action_id == motor.ACT_CLOSE:
+                icon = b"(\x01)"
+            else:
+                icon = b""
+
             t = time.localtime(task.timestamp)
-            display.write((8, row), format_time(t.tm_hour, t.tm_min, t.tm_sec))
+            display.write((5, row), format_time(t.tm_hour, t.tm_min, t.tm_sec))
+            display.write((13, row), icon)
 
         display.flush()
 
@@ -389,8 +397,8 @@ class HistoryMenu(Menu):
 
         lo, hi = self.get_min_max_cursors()
         display.write((0, 1), b"\x7F" if self.pos > lo else b" ")
-        display.write((1, 1), f"{self.pos + 1:02}/{hi + 1:02}".encode())
-        display.write((6, 1), b"\x7E" if self.pos < hi else b" ")
+        display.write((1, 1), f"{self.pos + 1:02}".encode())
+        display.write((3, 1), b"\x7E" if self.pos < hi else b" ")
 
         display.flush()
 
