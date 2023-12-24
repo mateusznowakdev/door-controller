@@ -130,36 +130,64 @@ class _Motor:
         self._ch4.value = False
 
     def sleep(self, duration: float) -> None:
-        max_loop_duration = wdt.TIMEOUT / 2
+        loop_duration = wdt.TIMEOUT / 2
 
         while duration > 0:
             wdt.feed()
-            time.sleep(max_loop_duration if duration > max_loop_duration else duration)
-            duration -= max_loop_duration
+            time.sleep(loop_duration if duration > loop_duration else duration)
+            duration -= loop_duration
 
         wdt.feed()
 
-    def open(self, duration: float) -> None:
-        logger.log(const.ACT_OPEN_START)
+    async def asleep(self, duration: float) -> None:
+        loop_duration = 0.5
 
+        while duration > 0:
+            wdt.feed()
+            await asyncio.sleep(loop_duration if duration > loop_duration else duration)
+            duration -= loop_duration
+
+        wdt.feed()
+
+    def open_start(self) -> None:
+        logger.log(const.ACT_OPEN_START)
         self._ch1.value = False
         self._ch2.value = True
-        self.sleep(duration)
+
+    def open_stop(self) -> None:
         self._ch1.value = False
         self._ch2.value = False
-
         logger.log(const.ACT_OPEN_STOP)
 
-    def close(self, duration: float) -> None:
-        logger.log(const.ACT_CLOSE_START)
+    def open(self, duration: float) -> None:
+        self.open_start()
+        self.sleep(duration)
+        self.open_stop()
 
+    async def aopen(self, duration: float) -> None:
+        self.open_start()
+        await self.asleep(duration)
+        self.open_stop()
+
+    def close_start(self) -> None:
+        logger.log(const.ACT_CLOSE_START)
         self._ch3.value = False
         self._ch4.value = True
-        self.sleep(duration)
+
+    def close_stop(self) -> None:
         self._ch3.value = False
         self._ch4.value = False
-
         logger.log(const.ACT_CLOSE_STOP)
+
+    def close(self, duration: float) -> None:
+        self.close_start()
+        self.sleep(duration)
+        self.close_stop()
+
+    async def aclose(self, duration: float) -> None:
+        self.close_start()
+        await self.asleep(duration)
+        self.close_stop()
 
 
 class _Display:
