@@ -23,7 +23,7 @@ then
   exit 1
 fi
 
-find app -name '*.py' -exec ./mpy-cross {} \;
+find app -maxdepth 1 -name '*.py' -exec ./mpy-cross {} \;
 
 mkdir -p "$CPY_HOME/app"
 
