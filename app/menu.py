@@ -375,7 +375,7 @@ class MeasurementMenu(Menu):
 
     def render(self) -> None:
         display.clear()
-        display.write((0, 0), f"{self.get_duration()}s".encode())
+        display.write((0, 1), f"{self.get_duration():4}s ...".encode())
         display.flush()
 
     async def loop_navi(self) -> None:
