@@ -113,6 +113,8 @@ class _Motor:
     ACT_CLOSE = 512 + 8
 
     def __init__(self) -> None:
+        self.lock = None
+
         self._ch1 = DigitalInOut(board.GP18)
         self._ch1.direction = Direction.OUTPUT
         self._ch1.value = False
@@ -149,45 +151,71 @@ class _Motor:
 
         wdt.feed()
 
-    def open_start(self) -> None:
+    def open_start(self) -> bool:
+        if self.lock:
+            return False
+
         logger.log(const.ACT_OPEN_START)
+
+        self.lock = object()
         self._ch1.value = False
         self._ch2.value = True
+
+        return True
 
     def open_stop(self) -> None:
         self._ch1.value = False
         self._ch2.value = False
+        self.lock = None
+
         logger.log(const.ACT_OPEN_STOP)
 
     def open(self, duration: float) -> None:
-        self.open_start()
+        if not self.open_start():
+            return
+
         self.sleep(duration)
         self.open_stop()
 
     async def aopen(self, duration: float) -> None:
-        self.open_start()
+        if not self.open_start():
+            return
+
         try:
             await self.asleep(duration)
         finally:
             self.open_stop()
 
-    def close_start(self) -> None:
+    def close_start(self) -> bool:
+        if self.lock:
+            return False
+
         logger.log(const.ACT_CLOSE_START)
+
+        self.lock = object()
         self._ch3.value = False
         self._ch4.value = True
+
+        return True
 
     def close_stop(self) -> None:
         self._ch3.value = False
         self._ch4.value = False
+        self.lock = None
+
         logger.log(const.ACT_CLOSE_STOP)
 
     def close(self, duration: float) -> None:
-        self.close_start()
+        if not self.close_start():
+            return
+
         self.sleep(duration)
         self.close_stop()
 
     async def aclose(self, duration: float) -> None:
-        self.close_start()
+        if not self.close_start():
+            return
+
         try:
             await self.asleep(duration)
         finally:
