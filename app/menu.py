@@ -356,6 +356,8 @@ class MeasurementMenu(Menu):
         super().__init__()
         self.time = time.time()
 
+        logger.log(const.SETTINGS_MEASURE)
+
         if action_id == motor.ACT_OPEN:
             self.task = asyncio.create_task(motor.aopen(self.MAX_VALUE))
         elif action_id == motor.ACT_CLOSE:

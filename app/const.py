@@ -10,6 +10,7 @@ RTC_SAVE = 8
 SETTINGS_ERROR = 16
 SETTINGS_SAVE = 17
 SETTINGS_RESET = 18
+SETTINGS_MEASURE = 19
 SCHEDULER_INIT = 24
 SCHEDULER_ERROR = 25
 SCHEDULER_ACTION = 26
@@ -36,9 +37,10 @@ TRANSLATIONS = {
         SETTINGS_ERROR: "Settings error",
         SETTINGS_SAVE: "Settings updated",
         SETTINGS_RESET: "Factory settings",
+        SETTINGS_MEASURE: "Measurement",
         SCHEDULER_INIT: "Scheduler start",
         SCHEDULER_ERROR: "Clock error",
-        SCHEDULER_ACTION: "Task start",
+        SCHEDULER_ACTION: "Scheduled task",
         ACT_OPEN_START: "Opening",
         ACT_OPEN_STOP: "Opened",
         ACT_CLOSE_START: "Closing",
@@ -59,6 +61,7 @@ TRANSLATIONS = {
         SETTINGS_ERROR: "Blad ustawien",
         SETTINGS_SAVE: "Zmiana ustawien",
         SETTINGS_RESET: "Ustaw.fabryczne",
+        SETTINGS_MEASURE: "Start pomiaru",
         SCHEDULER_INIT: "Start planisty",
         SCHEDULER_ERROR: "Blad zegara",
         SCHEDULER_ACTION: "Start zadania",
