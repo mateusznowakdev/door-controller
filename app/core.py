@@ -78,9 +78,9 @@ class _Logger:
 
         raw = eeprom[address : address + self.FRAME_SIZE]
         if not verify_checksum(raw):
-            return HistoryT(255, _(255), 0, 0, 0)
+            return HistoryT(255, 0, 0, 0)
 
-        return HistoryT(raw[0], _(raw[0]), raw[1], raw[2], raw[3])
+        return HistoryT(raw[0], raw[1], raw[2], raw[3])
 
     def log(self, message_id: int) -> None:
         log(_(message_id))

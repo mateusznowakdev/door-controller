@@ -6,7 +6,7 @@ _SettingsT = namedtuple(
 )
 HistoryT = namedtuple(
     "HistoryT",
-    ("id", "message", "hour", "minute", "second"),
+    ("id", "hour", "minute", "second"),
 )
 TaskT = namedtuple(
     "TaskT",

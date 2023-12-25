@@ -462,7 +462,7 @@ class HistoryMenu(Menu):
 
         display.clear()
         display.write((8, 1), format_time(entry.hour, entry.minute, entry.second))
-        display.write((0, 0), entry.message[:16].encode())
+        display.write((0, 0), _(entry.id)[:16].encode())
 
         lo, hi = self.get_min_max_cursors()
         display.write((0, 1), b"\x7F" if self.pos > lo else b" ")
