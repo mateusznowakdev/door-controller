@@ -166,8 +166,10 @@ class _Motor:
 
     async def aopen(self, duration: float) -> None:
         self.open_start()
-        await self.asleep(duration)
-        self.open_stop()
+        try:
+            await self.asleep(duration)
+        finally:
+            self.open_stop()
 
     def close_start(self) -> None:
         logger.log(const.ACT_CLOSE_START)
@@ -186,8 +188,10 @@ class _Motor:
 
     async def aclose(self, duration: float) -> None:
         self.close_start()
-        await self.asleep(duration)
-        self.close_stop()
+        try:
+            await self.asleep(duration)
+        finally:
+            self.close_stop()
 
 
 class _Display:
