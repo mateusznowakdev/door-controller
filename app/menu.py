@@ -8,7 +8,8 @@ from app.types import SettingsT
 
 
 class MenuExit(Exception):
-    pass
+    def __init__(self, code: int = 0) -> None:
+        self.code = code
 
 
 class Menu:
@@ -107,14 +108,15 @@ class Menu:
         if self.ALT_ICONS:
             display.set_default_icons()
 
-    async def _enter_submenu(self, instance: "Menu") -> None:
+    async def _enter_submenu(self, instance: "Menu") -> int:
         try:
             instance.enter()
             while True:
                 await instance.loop()
-        except MenuExit:
+        except MenuExit as e:
             instance.exit()
             self.enter()
+            return e.code
 
     def _enter_edit_mode(self) -> None:
         display.set_backlight(display.BACKLIGHT_HIGH)
@@ -238,67 +240,6 @@ class MainMenu(Menu):
         display.set_backlight(display.BACKLIGHT_OFF)
 
 
-class MotorMenu(Menu):
-    CURSORS = (
-        ((0, 0), (3, 0)),
-        ((3, 0), (6, 0)),
-        ((8, 0), (11, 0)),
-        ((11, 0), (14, 0)),
-        ((0, 1), (5, 1)),
-        ((5, 1), (9, 1)),
-        ((11, 1), (13, 1)),
-        ((13, 1), (15, 1)),
-    )
-    MIN_MAX_VALUES = (
-        (0, 23),
-        (0, 59),
-        (0, 23),
-        (0, 59),
-        (0, 900),
-        (1, 20),
-    )
-
-    ALT_ICONS = True
-
-    ID_OK = 6
-    ID_CANCEL = 7
-
-    def __init__(self, name: int) -> None:
-        super().__init__()
-
-        self.initial = list(settings.load(name))
-        self.data = list(self.initial)
-        self.name = name
-
-    def render(self) -> None:
-        ca, cb = self.get_cursor()
-
-        display.clear()
-        display.write((1, 0), format_time(self.data[0], self.data[1]))
-        display.write((7, 0), b"-")
-        display.write((9, 0), format_time(self.data[2], self.data[3]))
-        display.write((1, 1), f"{self.data[4]:3}s".encode())
-        display.write((6, 1), f"/{self.data[5]}".encode())
-        display.write((12, 1), b"\x02 \x03")
-        display.write(ca, b"\x06")
-        display.write(cb, b"\x07")
-        display.flush()
-
-    async def loop_navi_enter(self, duration: float) -> None:
-        if self.pos == self.ID_OK:
-            self.save()
-            raise MenuExit()
-        elif self.pos == self.ID_CANCEL:
-            raise MenuExit()
-        else:
-            await super().loop_navi_enter(duration)
-
-    def save(self) -> None:
-        if tuple(self.initial) != tuple(self.data):
-            settings.save(self.name, SettingsT(*self.data))
-            scheduler.restart()
-
-
 class PreviewMenu(Menu):
     def __init__(self) -> None:
         super().__init__()
@@ -341,6 +282,114 @@ class PreviewMenu(Menu):
         raise MenuExit()
 
 
+class MotorMenu(Menu):
+    CURSORS = (
+        ((0, 0), (3, 0)),
+        ((3, 0), (6, 0)),
+        ((8, 0), (11, 0)),
+        ((11, 0), (14, 0)),
+        ((0, 1), (5, 1)),
+        ((5, 1), (9, 1)),
+        ((9, 1), (11, 1)),
+        ((11, 1), (13, 1)),
+        ((13, 1), (15, 1)),
+    )
+    MIN_MAX_VALUES = (
+        (0, 23),
+        (0, 59),
+        (0, 23),
+        (0, 59),
+        (0, 900),
+        (1, 20),
+    )
+
+    ALT_ICONS = True
+
+    ID_DURATION = 4
+    ID_MEASURE = 6
+    ID_OK = 7
+    ID_CANCEL = 8
+
+    def __init__(self, action_id: int) -> None:
+        super().__init__()
+
+        self.initial = list(settings.load(action_id))
+        self.data = list(self.initial)
+        self.action_id = action_id
+
+    def render(self) -> None:
+        ca, cb = self.get_cursor()
+
+        display.clear()
+        display.write((1, 0), format_time(self.data[0], self.data[1]))
+        display.write((7, 0), b"-")
+        display.write((9, 0), format_time(self.data[2], self.data[3]))
+        display.write((1, 1), f"{self.data[4]:3}s".encode())
+        display.write((6, 1), f"/{self.data[5]}".encode())
+        display.write((10, 1), b"\x05 \x02 \x03")
+        display.write(ca, b"\x06")
+        display.write(cb, b"\x07")
+        display.flush()
+
+    async def loop_navi_enter(self, duration: float) -> None:
+        if self.pos == self.ID_MEASURE:
+            duration = await self._enter_submenu(MeasurementMenu(self.action_id))
+            self.data[self.ID_DURATION] = duration
+        elif self.pos == self.ID_OK:
+            self.save()
+            raise MenuExit()
+        elif self.pos == self.ID_CANCEL:
+            raise MenuExit()
+        else:
+            await super().loop_navi_enter(duration)
+
+    def save(self) -> None:
+        if tuple(self.initial) != tuple(self.data):
+            settings.save(self.action_id, SettingsT(*self.data))
+            scheduler.restart()
+
+
+class MeasurementMenu(Menu):
+    def __init__(self, action_id: int) -> None:
+        super().__init__()
+        self.time = time.time()
+
+        if action_id == motor.ACT_OPEN:
+            self.task = asyncio.create_task(motor.aopen(1000))
+        elif action_id == motor.ACT_CLOSE:
+            self.task = asyncio.create_task(motor.aclose(1000))
+        else:
+            raise ValueError("Unknown action ID")
+
+    def get_duration(self) -> int:
+        return int(time.time() - self.time)
+
+    def render(self) -> None:
+        display.clear()
+        display.write((0, 0), f"{self.get_duration()}s".encode())
+        display.flush()
+
+    async def loop_navi(self) -> None:
+        await super().loop_navi()
+
+        # time should be refreshed even if there is no input
+        self.render()
+
+    async def loop_navi_left(self, duration: float) -> None:
+        return
+
+    async def loop_navi_right(self, duration: float) -> None:
+        return
+
+    async def loop_navi_enter(self, duration: float) -> None:
+        try:
+            self.task.cancel()
+        except asyncio.CancelledError:
+            pass
+
+        raise MenuExit(self.get_duration())
+
+
 class SystemMenu(Menu):
     CURSORS = (
         ((0, 0), (3, 0)),
@@ -379,7 +428,7 @@ class SystemMenu(Menu):
         if self.pos == self.ID_OK:
             self.save()
             raise MenuExit()
-        elif self.pos == self.ID_CANCEL:
+        if self.pos == self.ID_CANCEL:
             raise MenuExit()
 
         await super().loop_navi_enter(duration)

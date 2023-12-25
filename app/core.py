@@ -414,7 +414,7 @@ class _Scheduler:
             elif action_id == motor.ACT_CLOSE:
                 function = lambda: motor.close(motor_settings.duration_single)
             else:
-                function = lambda: ...
+                raise ValueError("Unknown action ID")
 
             task = TaskT(action_id, ts, function)
             tasks.append(task)
