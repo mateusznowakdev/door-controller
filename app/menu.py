@@ -358,10 +358,12 @@ class MeasurementMenu(Menu):
     def __init__(self, action_id: int) -> None:
         super().__init__()
 
+        reason = motor.REASON_MEASURE
+
         if action_id == motor.ACT_OPEN:
-            coro = motor.aopen(motor.REASON_MEASURE, self.MAX_VALUE)
+            coro = motor.aopen(reason, self.MAX_VALUE)
         elif action_id == motor.ACT_CLOSE:
-            coro = motor.aclose(motor.REASON_MEASURE, self.MAX_VALUE)
+            coro = motor.aclose(reason, self.MAX_VALUE)
         else:
             raise ValueError("Unknown action ID")
 
