@@ -23,9 +23,6 @@ class Menu:
         self.pos = 0
         self.edit = False
 
-        if self.ALT_ICONS:
-            display.set_alternate_icons()
-
     def get_cursor(self) -> tuple[tuple[int, int], tuple[int, int]]:
         return self.CURSORS[self.pos]
 
@@ -42,6 +39,10 @@ class Menu:
 
     def enter(self) -> None:
         log(f"Switching to {self.__class__.__name__}")
+
+        if self.ALT_ICONS:
+            display.set_alternate_icons()
+
         self.render()
 
     async def loop(self) -> None:
