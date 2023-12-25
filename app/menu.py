@@ -404,31 +404,32 @@ class SystemMenu(Menu):
     CURSORS = (
         ((0, 0), (3, 0)),
         ((3, 0), (6, 0)),
+        ((6, 0), (9, 0)),
         ((11, 1), (13, 1)),
         ((13, 1), (15, 1)),
     )
     MIN_MAX_VALUES = (
         (0, 23),
         (0, 59),
+        (0, 59),
     )
 
     ALT_ICONS = True
 
-    ID_OK = 2
-    ID_CANCEL = 3
+    ID_OK = 3
+    ID_CANCEL = 4
 
     def __init__(self) -> None:
         super().__init__()
 
         now = time.localtime()
-        self.initial = [now.tm_hour, now.tm_min]
-        self.data = list(self.initial)
+        self.data = [now.tm_hour, now.tm_min, now.tm_sec]
 
     def render(self) -> None:
         ca, cb = self.get_cursor()
 
         display.clear()
-        display.write((1, 0), format_time(self.data[0], self.data[1]))
+        display.write((1, 0), format_time(self.data[0], self.data[1], self.data[2]))
         display.write((12, 1), b"\x02 \x03")
         display.write(ca, b"\x06")
         display.write(cb, b"\x07")
@@ -444,11 +445,10 @@ class SystemMenu(Menu):
         await super().loop_navi_enter(duration)
 
     def save(self) -> None:
-        if rtc.lost_power or tuple(self.initial) != tuple(self.data):
-            h, m = self.data
-            rtc.datetime = time.struct_time((2000, 1, 1, h, m, 0, 0, 0, -1))
-            logger.log(const.RTC_SAVE)
-            scheduler.restart()
+        h, m, s = self.data
+        rtc.datetime = time.struct_time((2000, 1, 1, h, m, s, 0, 0, -1))
+        logger.log(const.RTC_SAVE)
+        scheduler.restart()
 
 
 class HistoryMenu(Menu):
