@@ -350,14 +350,16 @@ class MotorMenu(Menu):
 
 
 class MeasurementMenu(Menu):
+    MAX_VALUE = 999
+
     def __init__(self, action_id: int) -> None:
         super().__init__()
         self.time = time.time()
 
         if action_id == motor.ACT_OPEN:
-            self.task = asyncio.create_task(motor.aopen(1000))
+            self.task = asyncio.create_task(motor.aopen(self.MAX_VALUE))
         elif action_id == motor.ACT_CLOSE:
-            self.task = asyncio.create_task(motor.aclose(1000))
+            self.task = asyncio.create_task(motor.aclose(self.MAX_VALUE))
         else:
             raise ValueError("Unknown action ID")
 
@@ -387,7 +389,8 @@ class MeasurementMenu(Menu):
         except asyncio.CancelledError:
             pass
 
-        raise MenuExit(self.get_duration())
+        duration = min(self.get_duration(), self.MAX_VALUE)
+        raise MenuExit(duration)
 
 
 class SystemMenu(Menu):
