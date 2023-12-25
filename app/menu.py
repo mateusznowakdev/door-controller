@@ -227,11 +227,13 @@ class MainMenu(Menu):
             await super().loop_navi_enter(duration)
 
     async def loop_edit(self) -> None:
+        reason = motor.REASON_ONESHOT
+
         if self.pos == self.ID_OPEN:
-            motor.open(settings.load(motor.ACT_OPEN).duration_single)
+            motor.open(reason, settings.load(motor.ACT_OPEN).duration_single)
             self._leave_edit_mode()
         elif self.pos == self.ID_CLOSE:
-            motor.close(settings.load(motor.ACT_CLOSE).duration_single)
+            motor.close(reason, settings.load(motor.ACT_CLOSE).duration_single)
             self._leave_edit_mode()
         else:
             await super().loop_navi()
@@ -355,16 +357,16 @@ class MeasurementMenu(Menu):
 
     def __init__(self, action_id: int) -> None:
         super().__init__()
-        self.time = time.time()
-
-        logger.log(const.SETTINGS_MEASURE)
 
         if action_id == motor.ACT_OPEN:
-            self.task = asyncio.create_task(motor.aopen(self.MAX_VALUE))
+            coro = motor.aopen(motor.REASON_MEASURE, self.MAX_VALUE)
         elif action_id == motor.ACT_CLOSE:
-            self.task = asyncio.create_task(motor.aclose(self.MAX_VALUE))
+            coro = motor.aclose(motor.REASON_MEASURE, self.MAX_VALUE)
         else:
             raise ValueError("Unknown action ID")
+
+        self.time = time.time()
+        self.task = asyncio.create_task(coro)
 
     def get_duration(self) -> int:
         return int(time.time() - self.time)

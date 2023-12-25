@@ -10,14 +10,16 @@ RTC_SAVE = 8
 SETTINGS_ERROR = 16
 SETTINGS_SAVE = 17
 SETTINGS_RESET = 18
-SETTINGS_MEASURE = 19
 SCHEDULER_INIT = 24
 SCHEDULER_ERROR = 25
-SCHEDULER_ACTION = 26
 ACT_OPEN_START = 32
-ACT_OPEN_STOP = 33
-ACT_CLOSE_START = 34
-ACT_CLOSE_STOP = 35
+ACT_OPEN_START_AUTO = 33
+ACT_OPEN_START_MEASURE = 34
+ACT_OPEN_STOP = 35
+ACT_CLOSE_START = 36
+ACT_CLOSE_START_AUTO = 36
+ACT_CLOSE_START_MEASURE = 37
+ACT_CLOSE_STOP = 39
 
 MENU_PREVIEW = 128
 MENU_OPEN = 129
@@ -37,13 +39,15 @@ TRANSLATIONS = {
         SETTINGS_ERROR: "Settings error",
         SETTINGS_SAVE: "Settings updated",
         SETTINGS_RESET: "Factory settings",
-        SETTINGS_MEASURE: "Measurement",
         SCHEDULER_INIT: "Scheduler start",
         SCHEDULER_ERROR: "Clock error",
-        SCHEDULER_ACTION: "Scheduled task",
-        ACT_OPEN_START: "Opening",
+        ACT_OPEN_START: "Opening (1)",
+        ACT_OPEN_START_AUTO: "Opening (A)",
+        ACT_OPEN_START_MEASURE: "Opening (M)",
         ACT_OPEN_STOP: "Opened",
-        ACT_CLOSE_START: "Closing",
+        ACT_CLOSE_START: "Closing (1)",
+        ACT_CLOSE_START_AUTO: "Closing (A)",
+        ACT_CLOSE_START_MEASURE: "Closing (M)",
         ACT_CLOSE_STOP: "Closed",
         INVALID: "(empty)",
         MENU_PREVIEW: "Preview",
@@ -61,13 +65,15 @@ TRANSLATIONS = {
         SETTINGS_ERROR: "Blad ustawien",
         SETTINGS_SAVE: "Zmiana ustawien",
         SETTINGS_RESET: "Ustaw.fabryczne",
-        SETTINGS_MEASURE: "Start pomiaru",
         SCHEDULER_INIT: "Start planisty",
         SCHEDULER_ERROR: "Blad zegara",
-        SCHEDULER_ACTION: "Start zadania",
-        ACT_OPEN_START: "Otwieranie",
+        ACT_OPEN_START: "Otwieranie (1)",
+        ACT_OPEN_START_AUTO: "Otwieranie (A)",
+        ACT_OPEN_START_MEASURE: "Otwieranie (M)",
         ACT_OPEN_STOP: "Otworzono",
-        ACT_CLOSE_START: "Zamykanie",
+        ACT_CLOSE_START: "Zamykanie (1)",
+        ACT_CLOSE_START_AUTO: "Zamykanie (A)",
+        ACT_CLOSE_START_MEASURE: "Zamykanie (M)",
         ACT_CLOSE_STOP: "Zamknieto",
         INVALID: "(pusty)",
         MENU_PREVIEW: "Podglad",

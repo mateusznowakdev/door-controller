@@ -112,6 +112,10 @@ class _Motor:
     ACT_OPEN = 512
     ACT_CLOSE = 512 + 8
 
+    REASON_ONESHOT = 0
+    REASON_AUTO = 1
+    REASON_MEASURE = 2
+
     def __init__(self) -> None:
         self.lock = None
 
@@ -151,11 +155,11 @@ class _Motor:
 
         wdt.feed()
 
-    def open_start(self) -> bool:
+    def open_start(self, reason_id: int) -> bool:
         if self.lock:
             return False
 
-        logger.log(const.ACT_OPEN_START)
+        logger.log(const.ACT_OPEN_START + reason_id)
 
         self.lock = object()
         self._ch1.value = False
@@ -170,15 +174,15 @@ class _Motor:
 
         logger.log(const.ACT_OPEN_STOP)
 
-    def open(self, duration: float) -> None:
-        if not self.open_start():
+    def open(self, reason_id: int, duration: float) -> None:
+        if not self.open_start(reason_id):
             return
 
         self.sleep(duration)
         self.open_stop()
 
-    async def aopen(self, duration: float) -> None:
-        if not self.open_start():
+    async def aopen(self, reason_id: int, duration: float) -> None:
+        if not self.open_start(reason_id):
             return
 
         try:
@@ -186,11 +190,11 @@ class _Motor:
         finally:
             self.open_stop()
 
-    def close_start(self) -> bool:
+    def close_start(self, reason_id: int) -> bool:
         if self.lock:
             return False
 
-        logger.log(const.ACT_CLOSE_START)
+        logger.log(const.ACT_CLOSE_START + reason_id)
 
         self.lock = object()
         self._ch3.value = False
@@ -205,15 +209,15 @@ class _Motor:
 
         logger.log(const.ACT_CLOSE_STOP)
 
-    def close(self, duration: float) -> None:
-        if not self.close_start():
+    def close(self, reason_id: int, duration: float) -> None:
+        if not self.close_start(reason_id):
             return
 
         self.sleep(duration)
         self.close_stop()
 
-    async def aclose(self, duration: float) -> None:
-        if not self.close_start():
+    async def aclose(self, reason_id: int, duration: float) -> None:
+        if not self.close_start(reason_id):
             return
 
         try:
@@ -431,6 +435,8 @@ class _Scheduler:
         motor_settings = settings.load(action_id)
         offsets = get_time_offsets(motor_settings)
 
+        reason = motor.REASON_AUTO
+
         for offset in offsets:
             # add extra 5s delay before any task can be run
             ts = midnight_ts + offset
@@ -438,13 +444,13 @@ class _Scheduler:
                 ts += const.DAY
 
             if action_id == motor.ACT_OPEN:
-                function = lambda: motor.open(motor_settings.duration_single)
+                fn = lambda: motor.open(reason, motor_settings.duration_single)
             elif action_id == motor.ACT_CLOSE:
-                function = lambda: motor.close(motor_settings.duration_single)
+                fn = lambda: motor.close(reason, motor_settings.duration_single)
             else:
                 raise ValueError("Unknown action ID")
 
-            task = TaskT(action_id, ts, function)
+            task = TaskT(action_id, ts, fn)
             tasks.append(task)
 
         return tasks
@@ -459,9 +465,10 @@ class _Scheduler:
             if now < task.timestamp:
                 continue
 
-            logger.log(const.SCHEDULER_ACTION)
             task.function()
-            self.tasks[idx] = TaskT(task.timestamp + const.DAY, task.function)
+
+            ts = task.timestamp + const.DAY
+            self.tasks[idx] = TaskT(task.action_id, ts, task.function)
 
             # skip processing other operations for now
             return
