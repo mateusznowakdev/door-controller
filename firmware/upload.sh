@@ -3,7 +3,7 @@
 set -e
 
 CPY_HOME=/media/$USER/CIRCUITPY
-CPY_VERSION="CircuitPython 8.2.9"
+CPY_VERSION="CircuitPython 9.0.3"
 
 if [ ! -f mpy-cross ]
 then
