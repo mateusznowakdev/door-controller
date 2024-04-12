@@ -1,0 +1,18 @@
+[submodule "firmware/lib/Adafruit_CircuitPython_asyncio"]
+	path = firmware/lib/Adafruit_CircuitPython_asyncio
+	url = https://github.com/adafruit/Adafruit_CircuitPython_asyncio
+[submodule "firmware/lib/Adafruit_CircuitPython_Ticks"]
+	path = firmware/lib/Adafruit_CircuitPython_Ticks
+	url = https://github.com/adafruit/Adafruit_CircuitPython_Ticks
+[submodule "firmware/lib/Adafruit_CircuitPython_24LC32"]
+	path = firmware/lib/Adafruit_CircuitPython_24LC32
+	url = https://github.com/adafruit/Adafruit_CircuitPython_24LC32
+[submodule "firmware/lib/Adafruit_CircuitPython_CharLCD"]
+	path = firmware/lib/Adafruit_CircuitPython_CharLCD
+	url = https://github.com/adafruit/Adafruit_CircuitPython_CharLCD
+[submodule "firmware/lib/Adafruit_CircuitPython_DS3231"]
+	path = firmware/lib/Adafruit_CircuitPython_DS3231
+	url = https://github.com/adafruit/Adafruit_CircuitPython_DS3231
+[submodule "firmware/lib/Adafruit_CircuitPython_Register"]
+	path = firmware/lib/Adafruit_CircuitPython_Register
+	url = https://github.com/adafruit/Adafruit_CircuitPython_Register

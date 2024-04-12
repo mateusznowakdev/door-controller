@@ -10,7 +10,6 @@ python = "^3.11"
 [tool.poetry.group.dev.dependencies]
 black = "^24.3.0"
 circuitpython-stubs = "9.0.3"
-circup = "^1.7.0"
 isort = "^5.13.2"
 pylint = "^3.1.0"
 pytest = "^8.1.1"
