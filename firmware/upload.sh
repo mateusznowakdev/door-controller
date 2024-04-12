@@ -33,7 +33,7 @@ then
 fi
 
 rsync -cv app/*.mpy "$CPY_HOME/app"
-rsync -cv boot.py main.py safemode.py "$CPY_HOME"
+rsync -cv boot.py code.py safemode.py "$CPY_HOME"
 sync
 
 rm -r app/*.mpy
