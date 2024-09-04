@@ -3,7 +3,7 @@
 set -e
 
 CPY_HOME=/media/$USER/CIRCUITPY
-CPY_VERSION="CircuitPython 9.0.3"
+CPY_VERSION="CircuitPython 9.1.3"
 
 LIB_FILES=(
   lib/Adafruit_CircuitPython_24LC32/adafruit_24lc32.mpy

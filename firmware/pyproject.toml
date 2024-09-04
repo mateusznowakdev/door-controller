@@ -3,16 +3,16 @@ name = "pico-controller"
 version = "1.0.0"
 description = ""
 authors = []
+package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.10"
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.3.0"
-circuitpython-stubs = "9.0.3"
+black = "^24.8.0"
 isort = "^5.13.2"
-pylint = "^3.1.0"
-pytest = "^8.1.1"
+pylint = "^3.2.7"
+pytest = "^8.3.2"
 
 [tool.isort]
 extra_standard_library = [
