@@ -314,11 +314,7 @@ class MotorMenu(Menu):
 
         display.clear()
         display.write((1, 0), format_time(self.data[0], self.data[1]))
-        display.write((7, 0), b"-")
-        display.write((9, 0), format_time(self.data[2], self.data[3]))
-        display.write((1, 1), f"{self.data[4]:3}s".encode())
-        display.write((6, 1), f"/{self.data[5]}".encode())
-        display.write((10, 1), b"\x05 \x02 \x03")
+        display.write((12, 1), b"\x02 \x03")
         display.write(ca, b"\x06")
         display.write(cb, b"\x07")
         display.flush()
