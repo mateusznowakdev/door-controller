@@ -289,29 +289,18 @@ class MotorMenu(Menu):
     CURSORS = (
         ((0, 0), (3, 0)),
         ((3, 0), (6, 0)),
-        ((8, 0), (11, 0)),
-        ((11, 0), (14, 0)),
-        ((0, 1), (5, 1)),
-        ((5, 1), (9, 1)),
-        ((9, 1), (11, 1)),
         ((11, 1), (13, 1)),
         ((13, 1), (15, 1)),
     )
     MIN_MAX_VALUES = (
         (0, 23),
         (0, 59),
-        (0, 23),
-        (0, 59),
-        (0, 900),
-        (1, 20),
     )
 
     ALT_ICONS = True
 
-    ID_DURATION = 4
-    ID_MEASURE = 6
-    ID_OK = 7
-    ID_CANCEL = 8
+    ID_OK = 2
+    ID_CANCEL = 3
 
     def __init__(self, action_id: int) -> None:
         super().__init__()
@@ -335,69 +324,18 @@ class MotorMenu(Menu):
         display.flush()
 
     async def loop_navi_enter(self, duration: float) -> None:
-        if self.pos == self.ID_MEASURE:
-            duration = await self._enter_submenu(MeasurementMenu(self.action_id))
-            self.data[self.ID_DURATION] = duration
-        elif self.pos == self.ID_OK:
+        if self.pos == self.ID_OK:
             self.save()
             raise MenuExit()
-        elif self.pos == self.ID_CANCEL:
+        if self.pos == self.ID_CANCEL:
             raise MenuExit()
-        else:
-            await super().loop_navi_enter(duration)
+
+        await super().loop_navi_enter(duration)
 
     def save(self) -> None:
         if tuple(self.initial) != tuple(self.data):
             settings.save(self.action_id, SettingsT(*self.data))
             scheduler.restart()
-
-
-class MeasurementMenu(Menu):
-    MAX_VALUE = 999
-
-    def __init__(self, action_id: int) -> None:
-        super().__init__()
-
-        reason = motor.REASON_MEASURE
-
-        if action_id == motor.ACT_OPEN:
-            coro = motor.aopen(reason, self.MAX_VALUE)
-        elif action_id == motor.ACT_CLOSE:
-            coro = motor.aclose(reason, self.MAX_VALUE)
-        else:
-            raise ValueError("Unknown action ID")
-
-        self.time = time.time()
-        self.task = asyncio.create_task(coro)
-
-    def get_duration(self) -> int:
-        return int(time.time() - self.time)
-
-    def render(self) -> None:
-        display.clear()
-        display.write((0, 1), f"{self.get_duration():4}s ...".encode())
-        display.flush()
-
-    async def loop_navi(self) -> None:
-        await super().loop_navi()
-
-        # time should be refreshed even if there is no input
-        self.render()
-
-    async def loop_navi_left(self, duration: float) -> None:
-        return
-
-    async def loop_navi_right(self, duration: float) -> None:
-        return
-
-    async def loop_navi_enter(self, duration: float) -> None:
-        try:
-            self.task.cancel()
-        except asyncio.CancelledError:
-            pass
-
-        duration = min(self.get_duration(), self.MAX_VALUE)
-        raise MenuExit(duration)
 
 
 class SystemMenu(Menu):
