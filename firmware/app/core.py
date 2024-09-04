@@ -4,9 +4,8 @@ import keypad
 import rtc as _rtc
 import time
 from busio import I2C
-from digitalio import DigitalInOut, Direction, Pull
+from digitalio import DigitalInOut, Direction
 from microcontroller import watchdog
-from pwmio import PWMOut
 from watchdog import WatchDogMode
 
 from adafruit_24lc32 import EEPROM_I2C
@@ -17,38 +16,29 @@ from app import const
 from app.shared import _, get_checksum, get_time_offsets, log, verify_checksum
 from app.types import HistoryT, SettingsT, TaskT
 
-WDT_PIN = board.GP28
+LCD_RS_PIN = board.GP11
+LCD_EN_PIN = board.GP10
+LCD_DB4_PIN = board.GP9
+LCD_DB5_PIN = board.GP8
+LCD_DB6_PIN = board.GP7
+LCD_DB7_PIN = board.GP6
 
-LCD_RS_PIN = board.GP9
-LCD_EN_PIN = board.GP8
-LCD_DB4_PIN = board.GP7
-LCD_DB5_PIN = board.GP6
-LCD_DB6_PIN = board.GP5
-LCD_DB7_PIN = board.GP4
-LCD_BL_PIN = board.GP3
+KEY_LEFT_PIN = board.GP18
+KEY_RIGHT_PIN = board.GP19
+KEY_ENTER_PIN = board.GP20
 
-KEY_LEFT_PIN = board.GP13
-KEY_RIGHT_PIN = board.GP14
-KEY_ENTER_PIN = board.GP15
-
-I2C_SCL_PIN = board.GP11
-I2C_SDA_PIN = board.GP10
+I2C_SCL_PIN = board.GP13
+I2C_SDA_PIN = board.GP12
 
 
 class _WatchDog:
     TIMEOUT = 8.0
 
     def __init__(self) -> None:
-        self.wdt_pin = DigitalInOut(WDT_PIN)
-        self.wdt_pin.direction = Direction.INPUT
-        self.wdt_pin.pull = Pull.DOWN
         self.enabled = False
 
     def feed(self) -> None:
-        # watchdog will be enabled as soon as wdt_pin is detected to be HIGH,
-        # and it cannot be disabled until restart
-
-        if not self.enabled and self.wdt_pin.value is True:
+        if not self.enabled:
             watchdog.timeout = self.TIMEOUT
             watchdog.mode = WatchDogMode.RESET
             self.enabled = True
@@ -286,9 +276,6 @@ class _Display:
         self._old_buffer = self._cur_buffer[:]
         self.clear()
 
-        self._backlight = PWMOut(LCD_BL_PIN)
-        self.set_backlight(self.BACKLIGHT_OFF)
-
     def clear(self) -> None:
         self._cur_buffer[:] = b" " * len(self._cur_buffer)
 
@@ -331,7 +318,7 @@ class _Display:
         self._display.create_char(7, self.CHAR_CURSOR_ALT_R)
 
     def set_backlight(self, value: int) -> None:
-        self._backlight.duty_cycle = value * 65535 // 100
+        pass
 
 
 class _Keys:
