@@ -334,6 +334,10 @@ class MotorMenu(Menu):
 
     def save(self) -> None:
         if tuple(self.initial) != tuple(self.data):
+            self.data[2] = self.data[0]
+            self.data[3] = self.data[1]
+            self.data[4] = 1
+            self.data[5] = 1
             settings.save(self.action_id, SettingsT(*self.data))
             scheduler.restart()
 
