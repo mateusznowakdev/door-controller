@@ -6,6 +6,7 @@ import time
 from busio import I2C
 from digitalio import DigitalInOut, Direction
 from microcontroller import watchdog
+from pwmio import PWMOut
 from watchdog import WatchDogMode
 
 from adafruit_24lc32 import EEPROM_I2C
@@ -126,21 +127,19 @@ class _Motor:
     def __init__(self) -> None:
         self.lock = None
 
-        self._ch1 = DigitalInOut(board.GP18)
-        self._ch1.direction = Direction.OUTPUT
-        self._ch1.value = False
+        self._r_en = DigitalInOut(board.GP2)
+        self._r_en.direction = Direction.OUTPUT
+        self._r_en.value = False
 
-        self._ch2 = DigitalInOut(board.GP19)
-        self._ch2.direction = Direction.OUTPUT
-        self._ch2.value = False
+        self._r_pwm = PWMOut(board.GP3)
+        self._r_pwm.duty_cycle = 0
 
-        self._ch3 = DigitalInOut(board.GP20)
-        self._ch3.direction = Direction.OUTPUT
-        self._ch3.value = False
+        self._l_en = DigitalInOut(board.GP4)
+        self._l_en.direction = Direction.OUTPUT
+        self._l_en.value = False
 
-        self._ch4 = DigitalInOut(board.GP21)
-        self._ch4.direction = Direction.OUTPUT
-        self._ch4.value = False
+        self._l_pwm = PWMOut(board.GP5)
+        self._l_pwm.duty_cycle = 0
 
     def sleep(self, duration: float) -> None:
         loop_duration = wdt.TIMEOUT / 2
@@ -169,14 +168,18 @@ class _Motor:
         logger.log(const.ACT_OPEN_START + reason_id)
 
         self.lock = object()
-        self._ch1.value = False
-        self._ch2.value = True
+        self._r_pwm.duty_cycle = 33 * 65536 // 100
+        self._l_pwm.duty_cycle = 0
+        self._r_en.value = True
+        self._l_en.value = True
 
         return True
 
     def open_stop(self) -> None:
-        self._ch1.value = False
-        self._ch2.value = False
+        self._r_pwm.duty_cycle = 0
+        self._l_pwm.duty_cycle = 0
+        self._r_en.value = False
+        self._l_en.value = False
         self.lock = None
 
         logger.log(const.ACT_OPEN_STOP)
@@ -185,6 +188,7 @@ class _Motor:
         if not self.open_start(reason_id):
             return
 
+        duration = 5.0
         self.sleep(duration)
         self.open_stop()
 
@@ -204,14 +208,18 @@ class _Motor:
         logger.log(const.ACT_CLOSE_START + reason_id)
 
         self.lock = object()
-        self._ch3.value = False
-        self._ch4.value = True
+        self._r_pwm.duty_cycle = 0
+        self._l_pwm.duty_cycle = 33 * 65536 // 100
+        self._r_en.value = True
+        self._l_en.value = True
 
         return True
 
     def close_stop(self) -> None:
-        self._ch3.value = False
-        self._ch4.value = False
+        self._r_pwm.duty_cycle = 0
+        self._l_pwm.duty_cycle = 0
+        self._r_en.value = False
+        self._l_en.value = False
         self.lock = None
 
         logger.log(const.ACT_CLOSE_STOP)
@@ -220,6 +228,7 @@ class _Motor:
         if not self.close_start(reason_id):
             return
 
+        duration = 3.5
         self.sleep(duration)
         self.close_stop()
 
