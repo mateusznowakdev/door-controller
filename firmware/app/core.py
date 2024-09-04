@@ -17,12 +17,29 @@ from app import const
 from app.shared import _, get_checksum, get_time_offsets, log, verify_checksum
 from app.types import HistoryT, SettingsT, TaskT
 
+WDT_PIN = board.GP28
+
+LCD_RS_PIN = board.GP9
+LCD_EN_PIN = board.GP8
+LCD_DB4_PIN = board.GP7
+LCD_DB5_PIN = board.GP6
+LCD_DB6_PIN = board.GP5
+LCD_DB7_PIN = board.GP4
+LCD_BL_PIN = board.GP3
+
+KEY_LEFT_PIN = board.GP13
+KEY_RIGHT_PIN = board.GP14
+KEY_ENTER_PIN = board.GP15
+
+I2C_SCL_PIN = board.GP11
+I2C_SDA_PIN = board.GP10
+
 
 class _WatchDog:
     TIMEOUT = 8.0
 
     def __init__(self) -> None:
-        self.wdt_pin = DigitalInOut(board.GP28)
+        self.wdt_pin = DigitalInOut(WDT_PIN)
         self.wdt_pin.direction = Direction.INPUT
         self.wdt_pin.pull = Pull.DOWN
         self.enabled = False
@@ -249,12 +266,12 @@ class _Display:
 
     def __init__(self) -> None:
         self._display = Character_LCD_Mono(
-            rs=DigitalInOut(board.GP9),
-            en=DigitalInOut(board.GP8),
-            db4=DigitalInOut(board.GP7),
-            db5=DigitalInOut(board.GP6),
-            db6=DigitalInOut(board.GP5),
-            db7=DigitalInOut(board.GP4),
+            rs=DigitalInOut(LCD_RS_PIN),
+            en=DigitalInOut(LCD_EN_PIN),
+            db4=DigitalInOut(LCD_DB4_PIN),
+            db5=DigitalInOut(LCD_DB5_PIN),
+            db6=DigitalInOut(LCD_DB6_PIN),
+            db7=DigitalInOut(LCD_DB7_PIN),
             columns=self.WIDTH,
             lines=self.HEIGHT,
         )
@@ -269,7 +286,7 @@ class _Display:
         self._old_buffer = self._cur_buffer[:]
         self.clear()
 
-        self._backlight = PWMOut(board.GP3)
+        self._backlight = PWMOut(LCD_BL_PIN)
         self.set_backlight(self.BACKLIGHT_OFF)
 
     def clear(self) -> None:
@@ -327,7 +344,7 @@ class _Keys:
 
     def __init__(self) -> None:
         self._keys = keypad.Keys(
-            pins=(board.GP13, board.GP14, board.GP15),
+            pins=(KEY_LEFT_PIN, KEY_RIGHT_PIN, KEY_ENTER_PIN),
             value_when_pressed=False,
             max_events=1,
         )
@@ -477,7 +494,7 @@ class _Scheduler:
 wdt = _WatchDog()
 wdt.feed()
 
-i2c = I2C(scl=board.GP11, sda=board.GP10)
+i2c = I2C(scl=I2C_SCL_PIN, sda=I2C_SDA_PIN)
 log("I2C initialized")
 
 rtc = DS3231(i2c)
