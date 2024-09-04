@@ -24,9 +24,9 @@ LCD_DB5_PIN = board.GP8
 LCD_DB6_PIN = board.GP7
 LCD_DB7_PIN = board.GP6
 
-KEY_LEFT_PIN = board.GP18
-KEY_RIGHT_PIN = board.GP19
-KEY_ENTER_PIN = board.GP20
+KEY_LEFT_PIN = board.GP19
+KEY_RIGHT_PIN = board.GP20
+KEY_ENTER_PIN = board.GP21
 
 I2C_SCL_PIN = board.GP13
 I2C_SDA_PIN = board.GP12
