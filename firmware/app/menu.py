@@ -452,7 +452,7 @@ class SystemMenu(Menu):
 
 
 class HistoryMenu(Menu):
-    MAX_VALUE = 49
+    MAX_VALUE = 98
 
     def __init__(self) -> None:
         super().__init__()
